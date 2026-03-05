@@ -1,0 +1,391 @@
+---
+title: Deployment Overview
+description: Deploy Money monorepo applications to production
+---
+
+## Deployment Strategy
+
+The Money monorepo consists of multiple Next.js applications that can be deployed independently or together. Each app is optimized for production deployment on various platforms.
+
+## Applications
+
+<CardGroup cols={2}>
+  <Card title="Web App" icon="globe" href="#web-app">
+    Marketing and landing pages
+  </Card>
+  <Card title="Secure App" icon="lock" href="#secure-app">
+    Password manager and vault
+  </Card>
+  <Card title="CashGap App" icon="chart-line" href="#cashgap-app">
+    Financial tracking platform
+  </Card>
+  <Card title="Docs App" icon="book" href="#docs-app">
+    Documentation site
+  </Card>
+</CardGroup>
+
+## Deployment Platforms
+
+All apps are Next.js applications and can be deployed to:
+
+### Vercel (Recommended)
+
+Optimal choice for Next.js apps:
+
+- Zero-configuration deployment
+- Automatic builds and deployments
+- Edge network and CDN
+- Preview deployments for PRs
+- Built-in environment variable management
+
+### Other Platforms
+
+- **Netlify**: Good Next.js support with plugins
+- **AWS**: EC2, ECS, or Amplify
+- **Google Cloud**: App Engine or Cloud Run
+- **DigitalOcean**: App Platform
+- **Self-hosted**: Docker containers or Node.js servers
+
+## Prerequisites
+
+<Steps>
+  <Step title="Build succeeds locally">
+    Ensure the production build works:
+
+    ```bash
+    pnpm build
+    ```
+  </Step>
+
+  <Step title="Environment variables configured">
+    All required variables must be set. See [Environment Variables](/development/deployment/environment-variables).
+  </Step>
+
+  <Step title="Database ready">
+    MongoDB instance accessible from production. See [Database Setup](/development/deployment/database-setup).
+  </Step>
+
+  <Step title="External services configured">
+    - SMTP server for emails
+    - Google OAuth (if using)
+    - Any other third-party services
+  </Step>
+</Steps>
+
+## Deploying to Vercel
+
+### Initial Setup
+
+<Steps>
+  <Step title="Install Vercel CLI">
+    ```bash
+    npm i -g vercel
+    ```
+  </Step>
+
+  <Step title="Login to Vercel">
+    ```bash
+    vercel login
+    ```
+  </Step>
+
+  <Step title="Link your project">
+    From the monorepo root:
+
+    ```bash
+    vercel link
+    ```
+
+    Select your team and project, or create a new one.
+  </Step>
+
+  <Step title="Configure environment variables">
+    In the Vercel dashboard:
+
+    1. Go to Project Settings → Environment Variables
+    2. Add all required variables (see [Environment Variables](/development/deployment/environment-variables))
+    3. Set variables for Production, Preview, and Development environments
+  </Step>
+</Steps>
+
+### Deploy Individual Apps
+
+Each app needs its own Vercel project:
+
+```bash
+# Deploy web app
+cd apps/web
+vercel --prod
+
+# Deploy secure app
+cd apps/secure
+vercel --prod
+
+# Deploy cashgap app
+cd apps/cashgap
+vercel --prod
+
+# Deploy docs app
+cd apps/docs
+vercel --prod
+```
+
+### Automatic Deployments
+
+Connect your GitHub repository to Vercel:
+
+1. Go to Vercel dashboard
+2. Import your GitHub repository
+3. Configure root directory for each app:
+   - Web: `apps/web`
+   - Secure: `apps/secure`
+   - CashGap: `apps/cashgap`
+   - Docs: `apps/docs`
+4. Add environment variables
+5. Deploy
+
+Vercel will automatically:
+- Deploy `main` branch to production
+- Create preview deployments for PRs
+- Run builds in the monorepo context
+
+## Deploying with Docker
+
+### Individual App Dockerfile
+
+Example Dockerfile for the secure app:
+
+```dockerfile
+FROM node:18-alpine AS base
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+
+# Install dependencies
+FROM base AS deps
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/secure/package.json ./apps/secure/
+COPY packages/*/package.json ./packages/
+RUN pnpm install --frozen-lockfile
+
+# Build app
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN pnpm build --filter=secure
+
+# Production image
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/apps/secure/.next/standalone ./
+COPY --from=builder /app/apps/secure/.next/static ./apps/secure/.next/static
+COPY --from=builder /app/apps/secure/public ./apps/secure/public
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+CMD ["node", "apps/secure/server.js"]
+```
+
+### Build and Run
+
+```bash
+# Build image
+docker build -t money-secure -f apps/secure/Dockerfile .
+
+# Run container
+docker run -p 3000:3000 \
+  -e MONGODB_URI="your-uri" \
+  -e JWT_SECRET="your-secret" \
+  # ... other env vars
+  money-secure
+```
+
+## Deployment Checklist
+
+### Pre-deployment
+
+- [ ] All tests passing (type check, lint, build)
+- [ ] Environment variables documented
+- [ ] Database migrations completed (if any)
+- [ ] External services configured
+- [ ] Domain/DNS configured
+- [ ] SSL certificates ready
+
+### Post-deployment
+
+- [ ] Application loads correctly
+- [ ] Authentication works
+- [ ] Database connections successful
+- [ ] Email sending works
+- [ ] OAuth flows complete
+- [ ] Error monitoring configured
+- [ ] Logs accessible
+- [ ] Performance metrics tracked
+
+## App-Specific Deployment Notes
+
+### Web App
+
+- No database required
+- Minimal environment variables
+- Can be deployed as static site with ISR
+- CDN-friendly
+
+### Secure App
+
+- **Requires**: MongoDB, JWT secrets, Auth secrets
+- **Optional**: Google OAuth, SMTP
+- High security requirements
+- Session management needed
+- Consider database backups
+
+### CashGap App
+
+- **Requires**: MongoDB, Auth secrets
+- **Optional**: Google OAuth, SMTP
+- Real-time data updates
+- Consider database indexing for performance
+
+### Docs App
+
+- No database required
+- Minimal environment variables
+- Can be deployed as static site
+- Consider search indexing
+
+## Environment Configuration
+
+<Warning>
+  Never commit `.env` files to version control. Use platform-specific environment variable management or secrets management services.
+</Warning>
+
+### Production Variables
+
+Ensure these are set in your deployment platform:
+
+```bash
+NODE_ENV=production
+MONGODB_URI=<production-database>
+JWT_SECRET=<strong-random-secret>
+JWT_REFRESH_SECRET=<different-strong-secret>
+AUTH_SECRET=<nextauth-secret>
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+ALLOWED_ORIGIN=https://your-domain.com
+# ... see Environment Variables page for complete list
+```
+
+## Monitoring and Logging
+
+### Recommended Tools
+
+- **Vercel Analytics**: Built-in performance monitoring
+- **Sentry**: Error tracking and monitoring
+- **LogRocket**: Session replay and debugging
+- **DataDog**: Full observability platform
+- **Vercel Logs**: Built-in logging on Vercel
+
+### Custom Logging
+
+Next.js outputs logs to stdout/stderr:
+
+```typescript
+// Custom logger example
+export function logError(error: Error, context?: Record<string, unknown>) {
+  console.error({
+    message: error.message,
+    stack: error.stack,
+    context,
+    timestamp: new Date().toISOString(),
+  });
+}
+```
+
+## Performance Optimization
+
+### Build Optimization
+
+- Enable SWC compiler (default in Next.js)
+- Use Turborepo caching
+- Minimize bundle size
+
+### Runtime Optimization
+
+- Enable Next.js caching
+- Use ISR for static pages
+- Implement proper database indexing
+- Use CDN for static assets
+- Enable compression
+
+## Rollback Strategy
+
+If a deployment fails:
+
+### Vercel
+
+1. Go to Deployments in dashboard
+2. Find previous successful deployment
+3. Click "..." → "Promote to Production"
+
+### Docker
+
+```bash
+# Tag deployments
+docker tag money-secure:latest money-secure:v1.2.3
+
+# Rollback to previous version
+docker pull money-secure:v1.2.2
+docker run money-secure:v1.2.2
+```
+
+## Troubleshooting
+
+### Build Fails in Production
+
+1. Check environment variables are set
+2. Verify Node.js version matches (18+)
+3. Check build logs for specific errors
+4. Ensure pnpm version is correct (9.0.0)
+
+### App Crashes on Start
+
+1. Check database connection
+2. Verify all required env vars are set
+3. Check for port conflicts
+4. Review application logs
+
+### Database Connection Errors
+
+1. Verify `MONGODB_URI` is correct
+2. Check network/firewall rules
+3. Ensure database accepts connections from deployment IP
+4. Verify database credentials
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="key" href="/development/deployment/environment-variables">
+    Complete environment variable reference
+  </Card>
+  <Card title="Database Setup" icon="database" href="/development/deployment/database-setup">
+    Configure production database
+  </Card>
+  <Card title="Building" icon="hammer" href="/development/building">
+    Build process details
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing/guidelines">
+    Contribution guidelines
+  </Card>
+</CardGroup>

@@ -1,0 +1,243 @@
+---
+title: Button Components
+description: Interactive button components with multiple variants, sizes, and loading states
+---
+
+## Button
+
+The `Button` component is a versatile, accessible button built with class-variance-authority for type-safe variants.
+
+### Basic Usage
+
+```tsx
+import { Button } from "@repo/ui";
+
+function Example() {
+  return <Button>Click me</Button>;
+}
+```
+
+## Props
+
+<ParamField path="variant" type="string" default="default">
+  The visual style variant of the button.
+  
+  Options: `default`, `destructive`, `danger`, `outline`, `secondary`, `ghost`, `link`
+</ParamField>
+
+<ParamField path="size" type="string" default="default">
+  The size of the button.
+  
+  Options: `default`, `sm`, `lg`, `xl`, `icon`, `icon-sm`, `icon-lg`
+</ParamField>
+
+<ParamField path="asChild" type="boolean" default="false">
+  When `true`, the button will render as a Slot component, merging props with the child element.
+</ParamField>
+
+<ParamField path="isLoading" type="boolean" default="false">
+  When `true`, displays a loading spinner and disables the button.
+</ParamField>
+
+<ParamField path="disabled" type="boolean" default="false">
+  When `true`, disables the button.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Additional CSS classes to apply to the button.
+</ParamField>
+
+## Variants
+
+<Tabs>
+  <Tab title="Default">
+    The default primary button style with solid background.
+
+    ```tsx
+    <Button variant="default">Default Button</Button>
+    ```
+  </Tab>
+  
+  <Tab title="Destructive">
+    Used for dangerous or destructive actions.
+
+    ```tsx
+    <Button variant="destructive">Delete</Button>
+    <Button variant="danger">Remove</Button>
+    ```
+    
+    Note: Both `destructive` and `danger` apply the same styling.
+  </Tab>
+  
+  <Tab title="Outline">
+    A button with a border and transparent background.
+
+    ```tsx
+    <Button variant="outline">Outline Button</Button>
+    ```
+  </Tab>
+  
+  <Tab title="Secondary">
+    A secondary button style with muted colors.
+
+    ```tsx
+    <Button variant="secondary">Secondary</Button>
+    ```
+  </Tab>
+  
+  <Tab title="Ghost">
+    A subtle button with no background until hovered.
+
+    ```tsx
+    <Button variant="ghost">Ghost Button</Button>
+    ```
+  </Tab>
+  
+  <Tab title="Link">
+    Styled as a link with underline on hover.
+
+    ```tsx
+    <Button variant="link">Link Button</Button>
+    ```
+  </Tab>
+</Tabs>
+
+## Sizes
+
+<Tabs>
+  <Tab title="Text Buttons">
+    ```tsx
+    <Button size="sm">Small</Button>
+    <Button size="default">Default</Button>
+    <Button size="lg">Large</Button>
+    <Button size="xl">Extra Large</Button>
+    ```
+    
+    - `sm` - Height: 32px (h-8)
+    - `default` - Height: 36px (h-9)
+    - `lg` - Height: 40px (h-10)
+    - `xl` - Height: 44px (h-11)
+  </Tab>
+  
+  <Tab title="Icon Buttons">
+    ```tsx
+    import { Plus } from "lucide-react";
+    
+    <Button size="icon-sm"><Plus /></Button>
+    <Button size="icon"><Plus /></Button>
+    <Button size="icon-lg"><Plus /></Button>
+    ```
+    
+    - `icon-sm` - Size: 32x32px (size-8)
+    - `icon` - Size: 36x36px (size-9)
+    - `icon-lg` - Size: 40x40px (size-10)
+  </Tab>
+</Tabs>
+
+## Loading State
+
+Buttons can display a loading spinner:
+
+```tsx
+function Example() {
+  const [loading, setLoading] = useState(false);
+  
+  return (
+    <Button 
+      isLoading={loading}
+      onClick={() => setLoading(true)}
+    >
+      Save Changes
+    </Button>
+  );
+}
+```
+
+When `isLoading` is `true`:
+- A `Loader2` spinner icon appears
+- The button is automatically disabled
+- The button text remains visible
+
+## Using as Child (asChild)
+
+The `asChild` prop allows the button to merge its props with a child component:
+
+```tsx
+import { Link } from "react-router-dom";
+
+<Button asChild>
+  <Link to="/dashboard">Go to Dashboard</Link>
+</Button>
+```
+
+This renders a Link component with button styling, useful for routing libraries.
+
+## Complete Example
+
+```tsx
+import { Button } from "@repo/ui";
+import { Trash2, Download, Plus } from "lucide-react";
+
+function ActionBar() {
+  const [deleting, setDeleting] = useState(false);
+  
+  return (
+    <div className="flex gap-2">
+      {/* Primary action */}
+      <Button>
+        <Plus />
+        Create New
+      </Button>
+      
+      {/* Secondary action */}
+      <Button variant="outline">
+        <Download />
+        Export
+      </Button>
+      
+      {/* Destructive action with loading */}
+      <Button 
+        variant="destructive"
+        isLoading={deleting}
+        onClick={() => setDeleting(true)}
+      >
+        <Trash2 />
+        Delete
+      </Button>
+      
+      {/* Icon-only button */}
+      <Button size="icon" variant="ghost">
+        <Plus />
+      </Button>
+    </div>
+  );
+}
+```
+
+## TypeScript Types
+
+```tsx
+type ButtonProps = React.ComponentProps<"button"> & {
+  variant?: "default" | "destructive" | "danger" | "outline" | "secondary" | "ghost" | "link";
+  size?: "default" | "sm" | "lg" | "xl" | "icon" | "icon-sm" | "icon-lg";
+  asChild?: boolean;
+  isLoading?: boolean;
+};
+```
+
+## Accessibility
+
+- Supports keyboard navigation (Enter/Space to activate)
+- Proper focus indicators with ring styles
+- Disabled state prevents interaction
+- Loading state automatically disables and announces
+- Works with `aria-invalid` for form validation
+
+## Styling Details
+
+The button uses several advanced Tailwind features:
+
+- **Focus visible rings** - `focus-visible:ring-ring/50 focus-visible:ring-[3px]`
+- **SVG sizing** - Automatically sizes icons to 16px (size-4)
+- **Transitions** - Smooth hover and focus transitions
+- **Dark mode support** - Variant-specific dark mode styles

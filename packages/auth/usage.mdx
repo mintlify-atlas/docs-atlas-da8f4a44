@@ -1,0 +1,447 @@
+---
+title: Usage Guide
+description: Real-world examples and patterns for using the auth package
+---
+
+This guide covers common usage patterns for the auth package, from basic form implementation to advanced customization.
+
+## useAuth Hook
+
+The `useAuth` hook is the core of the package. It provides authentication methods and state management.
+
+### Basic Usage
+
+```typescript
+import { useAuth } from '@repo/auth';
+import { authAdapter } from './auth-adapter';
+
+function MyComponent() {
+  const { loading, error, signIn, signUp, signOut } = useAuth({ 
+    adapter: authAdapter 
+  });
+  
+  // Use the methods in your component
+}
+```
+
+### Return Values
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `loading` | `boolean` | `true` when an auth operation is in progress |
+| `error` | `Error \| null` | Contains error if last operation failed |
+| `signIn` | `(data: Record<string, any>) => Promise<void>` | Authenticate a user |
+| `signUp` | `(data: Record<string, any>) => Promise<void>` | Register a new user |
+| `signOut` | `() => Promise<void>` | Sign out the current user |
+
+### Custom Login Form
+
+```tsx
+import { useAuth } from '@repo/auth';
+import { Button, Input, PasswordInput } from '@repo/ui';
+import { useState } from 'react';
+import { authAdapter } from './auth-adapter';
+
+function CustomLoginForm() {
+  const { loading, error, signIn } = useAuth({ adapter: authAdapter });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      await signIn({ email, password });
+      // Redirect or update UI on success
+      window.location.href = '/dashboard';
+    } catch (err) {
+      // Error is already set in the hook's state
+      console.error('Login failed:', err);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400">
+          {error.message}
+        </div>
+      )}
+      
+      <Input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        required
+      />
+      
+      <PasswordInput
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
+        required
+      />
+      
+      <Button 
+        type="submit" 
+        disabled={loading}
+        isLoading={loading}
+        className="w-full"
+      >
+        Sign in
+      </Button>
+    </form>
+  );
+}
+```
+
+<Note>
+  The `useAuth` hook automatically handles error state. You don't need to wrap calls in try/catch unless you want to perform additional error handling.
+</Note>
+
+## LoginForm Component
+
+Pre-built login form with email and password fields.
+
+### Props
+
+```typescript
+type LoginFormProps = {
+  onSuccess?: () => void;
+  adapter?: AuthAdapter;
+};
+```
+
+### Basic Example
+
+```tsx
+import { LoginForm, AuthLayout } from '@repo/auth';
+import { authAdapter } from './auth-adapter';
+
+export default function LoginPage() {
+  return (
+    <AuthLayout>
+      <div className="bg-card rounded-2xl shadow-lg p-8">
+        <h2 className="text-3xl font-bold mb-2">Welcome back</h2>
+        <p className="text-muted-foreground text-lg mb-8">Sign in to your account</p>
+        
+        <LoginForm 
+          adapter={authAdapter}
+          onSuccess={() => {
+            console.log('Login successful!');
+            window.location.href = '/dashboard';
+          }}
+        />
+        
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          Don't have an account?{' '}
+          <a href="/register" className="text-primary hover:underline">
+            Sign up
+          </a>
+        </p>
+      </div>
+    </AuthLayout>
+  );
+}
+```
+
+### Features
+
+- ✅ Email validation (HTML5)
+- ✅ Password field with visibility toggle
+- ✅ Loading state with disabled inputs
+- ✅ Error display with user-friendly messages
+- ✅ Required field validation
+
+## RegisterForm Component
+
+Pre-built registration form with email, password, and terms acceptance.
+
+### Props
+
+```typescript
+type RegisterFormProps = {
+  onSuccess?: () => void;
+  adapter?: AuthAdapter;
+};
+```
+
+### Basic Example
+
+```tsx
+import { RegisterForm, AuthLayout } from '@repo/auth';
+import { authAdapter } from './auth-adapter';
+
+export default function RegisterPage() {
+  return (
+    <AuthLayout>
+      <div className="bg-card rounded-2xl shadow-lg p-8">
+        <h2 className="text-3xl font-bold mb-2">Create account</h2>
+        <p className="text-muted-foreground text-lg mb-8">
+          Get started with Money today
+        </p>
+        
+        <RegisterForm 
+          adapter={authAdapter}
+          onSuccess={() => {
+            window.location.href = '/onboarding';
+          }}
+        />
+        
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          Already have an account?{' '}
+          <a href="/login" className="text-primary hover:underline">
+            Sign in
+          </a>
+        </p>
+      </div>
+    </AuthLayout>
+  );
+}
+```
+
+### Features
+
+- ✅ Email validation
+- ✅ Password requirements (minimum 8 characters)
+- ✅ Terms and Privacy Policy acceptance checkbox
+- ✅ Submit button disabled until terms are accepted
+- ✅ Loading and error states
+
+<Tip>
+  Update the `/terms` and `/privacy` links in the RegisterForm to match your application's routes.
+</Tip>
+
+## AuthLayout Component
+
+A centered layout wrapper for authentication pages with responsive padding.
+
+### Basic Usage
+
+```tsx
+import { AuthLayout } from '@repo/auth';
+
+function MyAuthPage() {
+  return (
+    <AuthLayout>
+      {/* Your auth content here */}
+      <div className="bg-card rounded-2xl p-8">
+        <h1>Authentication</h1>
+      </div>
+    </AuthLayout>
+  );
+}
+```
+
+### Layout Structure
+
+The `AuthLayout` component provides:
+
+- Full-height viewport (`min-h-screen`)
+- Centered content (flexbox)
+- Responsive padding (`p-6`)
+- Background color (`bg-background`)
+- Max width container (`max-w-md`)
+- Dashboard wrapper integration
+
+## Advanced Patterns
+
+### Social Authentication
+
+Extend the adapter to support social login:
+
+```typescript
+import type { AuthAdapter } from '@repo/auth';
+
+export const extendedAdapter: AuthAdapter = {
+  signIn: async (data) => {
+    // Email/password sign-in
+    if (data.email && data.password) {
+      await authClient.signIn.email(data);
+    }
+    // Social sign-in
+    else if (data.provider) {
+      await authClient.signIn.social({ provider: data.provider });
+    }
+  },
+  signUp: async (data) => {
+    await authClient.signUp.email(data);
+  },
+  signOut: async () => {
+    await authClient.signOut();
+  },
+};
+```
+
+Then use it in your UI:
+
+```tsx
+import { useAuth } from '@repo/auth';
+import { Button } from '@repo/ui';
+import { extendedAdapter } from './extended-adapter';
+
+function SocialLoginButtons() {
+  const { signIn, loading } = useAuth({ adapter: extendedAdapter });
+
+  return (
+    <div className="space-y-3">
+      <Button
+        variant="outline"
+        className="w-full"
+        disabled={loading}
+        onClick={() => signIn({ provider: 'google' })}
+      >
+        Continue with Google
+      </Button>
+      
+      <Button
+        variant="outline"
+        className="w-full"
+        disabled={loading}
+        onClick={() => signIn({ provider: 'github' })}
+      >
+        Continue with GitHub
+      </Button>
+    </div>
+  );
+}
+```
+
+### Two-Factor Authentication
+
+Add 2FA by extending the form flow:
+
+```tsx
+import { useAuth } from '@repo/auth';
+import { useState } from 'react';
+import { Input, Button } from '@repo/ui';
+
+function TwoFactorLogin() {
+  const { signIn, loading, error } = useAuth({ adapter: authAdapter });
+  const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+
+  const handleCredentials = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await signIn({ email, password, skipOTP: true });
+      setStep('otp'); // Move to OTP step
+    } catch (err) {
+      // Handle error
+    }
+  };
+
+  const handleOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await signIn({ email, password, otp });
+  };
+
+  if (step === 'otp') {
+    return (
+      <form onSubmit={handleOTP} className="space-y-4">
+        <Input
+          value={otp}
+          onChange={(e) => setOtp(e.target.value)}
+          placeholder="Enter 6-digit code"
+          maxLength={6}
+          required
+        />
+        <Button type="submit" isLoading={loading} className="w-full">
+          Verify
+        </Button>
+      </form>
+    );
+  }
+
+  return (
+    <form onSubmit={handleCredentials} className="space-y-4">
+      {/* Email and password fields */}
+    </form>
+  );
+}
+```
+
+### Session Persistence
+
+Check authentication status on mount:
+
+```tsx
+import { useAuth } from '@repo/auth';
+import { useEffect, useState } from 'react';
+
+function ProtectedRoute({ children }) {
+  const { error } = useAuth({ adapter: authAdapter });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    // Check if user has valid session
+    authAdapter.getSession?.().then((session) => {
+      setIsAuthenticated(!!session);
+      setChecking(false);
+    });
+  }, []);
+
+  if (checking) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    window.location.href = '/login';
+    return null;
+  }
+
+  return <>{children}</>;
+}
+```
+
+<Note>
+  The auth package doesn't include session management. Use your authentication provider's session handling or add it to your adapter.
+</Note>
+
+## Best Practices
+
+1. **Create a single adapter instance** - Define your adapter once and import it where needed
+2. **Handle onSuccess callbacks** - Always redirect or update UI after successful auth operations
+3. **Use TypeScript** - Import types for better IDE support and type safety
+4. **Customize error messages** - The hook provides enhanced errors, but you can customize them further
+5. **Test your adapter** - Write tests for your adapter's methods independently
+
+## Troubleshooting
+
+### Error: "signIn is not a function"
+
+Make sure you're passing an adapter to `useAuth`:
+
+```typescript
+// ❌ Wrong
+const { signIn } = useAuth();
+
+// ✅ Correct
+const { signIn } = useAuth({ adapter: authAdapter });
+```
+
+### Errors not displaying
+
+The error state is managed by the hook. Make sure you're reading it:
+
+```tsx
+const { error } = useAuth({ adapter: authAdapter });
+
+{error && <div>{error.message}</div>}
+```
+
+### Form not submitting
+
+Check that you're awaiting the auth methods:
+
+```typescript
+// ❌ Wrong
+signIn({ email, password });
+
+// ✅ Correct
+await signIn({ email, password });
+```

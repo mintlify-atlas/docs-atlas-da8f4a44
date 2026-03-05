@@ -1,0 +1,558 @@
+---
+title: Sidebar Components
+description: A comprehensive collapsible sidebar system with mobile support, keyboard shortcuts, and extensive customization options
+---
+
+## Overview
+
+The Sidebar component system provides a full-featured navigation sidebar with:
+- Desktop and mobile responsive behavior
+- Collapsible states (expanded/collapsed)
+- Keyboard shortcuts (Cmd/Ctrl + B)
+- Icon-only collapsed mode
+- Sheet-based mobile drawer
+- Tooltips for collapsed items
+- Cookie-based state persistence
+
+## Quick Start
+
+```tsx
+import { 
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+  SidebarTrigger,
+} from "@repo/ui";
+import { Home, Settings } from "lucide-react";
+
+function App() {
+  return (
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <Home />
+                  <span>Home</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <Settings />
+                  <span>Settings</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+      <SidebarInset>
+        <header>
+          <SidebarTrigger />
+        </header>
+        <main>{/* Your page content */}</main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+```
+
+## Core Components
+
+### SidebarProvider
+
+The root component that manages sidebar state.
+
+<ParamField path="defaultOpen" type="boolean" default="true">
+  Default open state of the sidebar.
+</ParamField>
+
+<ParamField path="open" type="boolean">
+  Controlled open state. Use with `onOpenChange` for controlled mode.
+</ParamField>
+
+<ParamField path="onOpenChange" type="(open: boolean) => void">
+  Callback when open state changes.
+</ParamField>
+
+### Sidebar
+
+The main sidebar container.
+
+<ParamField path="side" type="string" default="left">
+  Which side to display the sidebar.
+  
+  Options: `left`, `right`
+</ParamField>
+
+<ParamField path="variant" type="string" default="sidebar">
+  Visual variant of the sidebar.
+  
+  Options: `sidebar`, `floating`, `inset`
+  
+  - `sidebar` - Standard attached sidebar
+  - `floating` - Floating sidebar with rounded corners
+  - `inset` - Inset sidebar with margin
+</ParamField>
+
+<ParamField path="collapsible" type="string" default="offcanvas">
+  Collapse behavior.
+  
+  Options: `offcanvas`, `icon`, `none`
+  
+  - `offcanvas` - Slides completely off screen
+  - `icon` - Collapses to icon-only width
+  - `none` - Cannot be collapsed
+</ParamField>
+
+### useSidebar Hook
+
+Access sidebar state and controls from any component within SidebarProvider.
+
+```tsx
+import { useSidebar } from "@repo/ui";
+
+function MyComponent() {
+  const { 
+    state,        // "expanded" | "collapsed"
+    open,         // boolean
+    setOpen,      // (open: boolean) => void
+    openMobile,   // boolean
+    setOpenMobile,// (open: boolean) => void
+    isMobile,     // boolean
+    toggleSidebar // () => void
+  } = useSidebar();
+  
+  return <div>Sidebar is {state}</div>;
+}
+```
+
+## Menu Components
+
+### SidebarMenu
+
+Container for menu items.
+
+```tsx
+<SidebarMenu>
+  <SidebarMenuItem>...</SidebarMenuItem>
+</SidebarMenu>
+```
+
+### SidebarMenuItem
+
+Individual menu item wrapper.
+
+### SidebarMenuButton
+
+Clickable menu button with variants and active states.
+
+<ParamField path="asChild" type="boolean" default="false">
+  Render as a slot for custom elements (e.g., Next.js Link).
+</ParamField>
+
+<ParamField path="isActive" type="boolean" default="false">
+  Whether this menu item is currently active.
+</ParamField>
+
+<ParamField path="variant" type="string" default="default">
+  Visual variant.
+  
+  Options: `default`, `outline`
+</ParamField>
+
+<ParamField path="size" type="string" default="default">
+  Button size.
+  
+  Options: `default`, `sm`, `lg`
+</ParamField>
+
+<ParamField path="tooltip" type="string | object">
+  Tooltip content shown when sidebar is collapsed.
+</ParamField>
+
+### Example with Tooltips
+
+```tsx
+<SidebarMenuItem>
+  <SidebarMenuButton tooltip="Dashboard">
+    <Home />
+    <span>Dashboard</span>
+  </SidebarMenuButton>
+</SidebarMenuItem>
+```
+
+When collapsed, only the icon shows and hovering displays "Dashboard" tooltip.
+
+## Submenu Components
+
+### SidebarMenuSub
+
+Nested submenu container.
+
+### SidebarMenuSubItem
+
+Submenu item wrapper.
+
+### SidebarMenuSubButton
+
+Submenu button component.
+
+```tsx
+<SidebarMenuItem>
+  <SidebarMenuButton>
+    <Settings />
+    <span>Settings</span>
+  </SidebarMenuButton>
+  <SidebarMenuSub>
+    <SidebarMenuSubItem>
+      <SidebarMenuSubButton>Profile</SidebarMenuSubButton>
+    </SidebarMenuSubItem>
+    <SidebarMenuSubItem>
+      <SidebarMenuSubButton>Preferences</SidebarMenuSubButton>
+    </SidebarMenuSubItem>
+  </SidebarMenuSub>
+</SidebarMenuItem>
+```
+
+## Layout Components
+
+### SidebarHeader
+
+Header section at the top of the sidebar.
+
+```tsx
+<Sidebar>
+  <SidebarHeader>
+    <div className="flex items-center gap-2">
+      <Logo />
+      <span className="font-semibold">My App</span>
+    </div>
+  </SidebarHeader>
+  <SidebarContent>...</SidebarContent>
+</Sidebar>
+```
+
+### SidebarContent
+
+Scrollable content area.
+
+### SidebarFooter
+
+Footer section at the bottom (e.g., user profile).
+
+```tsx
+<Sidebar>
+  <SidebarContent>...</SidebarContent>
+  <SidebarFooter>
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton>
+          <User />
+          <span>Profile</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  </SidebarFooter>
+</Sidebar>
+```
+
+### SidebarGroup
+
+Groups related menu items.
+
+### SidebarGroupLabel
+
+Label for a group of items.
+
+### SidebarGroupContent
+
+Content wrapper for group items.
+
+### SidebarGroupAction
+
+Action button in group header.
+
+```tsx
+<SidebarGroup>
+  <SidebarGroupLabel>
+    Projects
+    <SidebarGroupAction>
+      <Plus />
+    </SidebarGroupAction>
+  </SidebarGroupLabel>
+  <SidebarGroupContent>
+    <SidebarMenu>...</SidebarMenu>
+  </SidebarGroupContent>
+</SidebarGroup>
+```
+
+## Additional Components
+
+### SidebarInset
+
+Main content area container.
+
+```tsx
+<SidebarInset>
+  <main>{/* Your page content */}</main>
+</SidebarInset>
+```
+
+### SidebarTrigger
+
+Button to toggle sidebar open/closed.
+
+```tsx
+<SidebarTrigger />
+```
+
+### SidebarRail
+
+Hover area for expanding collapsed sidebar.
+
+```tsx
+<Sidebar>
+  <SidebarContent>...</SidebarContent>
+  <SidebarRail />
+</Sidebar>
+```
+
+### SidebarSeparator
+
+Visual separator between sections.
+
+```tsx
+<SidebarContent>
+  <SidebarGroup>...</SidebarGroup>
+  <SidebarSeparator />
+  <SidebarGroup>...</SidebarGroup>
+</SidebarContent>
+```
+
+### SidebarInput
+
+Search input styled for sidebar.
+
+```tsx
+<SidebarHeader>
+  <SidebarInput placeholder="Search..." />
+</SidebarHeader>
+```
+
+### SidebarMenuAction
+
+Action button on menu items (e.g., dropdown trigger).
+
+<ParamField path="showOnHover" type="boolean" default="false">
+  Only show the action on hover.
+</ParamField>
+
+```tsx
+<SidebarMenuItem>
+  <SidebarMenuButton>Item</SidebarMenuButton>
+  <SidebarMenuAction showOnHover>
+    <MoreHorizontal />
+  </SidebarMenuAction>
+</SidebarMenuItem>
+```
+
+### SidebarMenuBadge
+
+Badge/counter on menu items.
+
+```tsx
+<SidebarMenuItem>
+  <SidebarMenuButton>
+    <Inbox />
+    <span>Inbox</span>
+  </SidebarMenuButton>
+  <SidebarMenuBadge>12</SidebarMenuBadge>
+</SidebarMenuItem>
+```
+
+### SidebarMenuSkeleton
+
+Loading skeleton for menu items.
+
+<ParamField path="showIcon" type="boolean" default="false">
+  Whether to show the icon skeleton.
+</ParamField>
+
+```tsx
+<SidebarMenu>
+  <SidebarMenuSkeleton showIcon />
+  <SidebarMenuSkeleton showIcon />
+</SidebarMenu>
+```
+
+## Complete Example
+
+```tsx
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+  SidebarInset,
+  SidebarTrigger,
+  SidebarSeparator,
+} from "@repo/ui";
+import { 
+  Home, 
+  Settings, 
+  Users, 
+  FileText,
+  ChevronDown,
+} from "lucide-react";
+
+function AppSidebar() {
+  return (
+    <Sidebar>
+      <SidebarHeader>
+        <div className="flex items-center gap-2 px-2">
+          <img src="/logo.svg" className="size-8" />
+          <span className="font-bold text-lg">MyApp</span>
+        </div>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Main</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive tooltip="Home">
+                  <Home />
+                  <span>Home</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Users">
+                  <Users />
+                  <span>Users</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        <SidebarSeparator />
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <Settings />
+                  <span>General</span>
+                  <ChevronDown className="ml-auto" />
+                </SidebarMenuButton>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton>Profile</SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton>Preferences</SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton>
+              <img src="/avatar.jpg" className="size-6 rounded-full" />
+              <span>John Doe</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
+
+function App() {
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 items-center gap-2 border-b px-4">
+          <SidebarTrigger />
+          <h1>Page Title</h1>
+        </header>
+        <main className="p-6">
+          {/* Your content */}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+```
+
+## Keyboard Shortcuts
+
+The sidebar automatically registers a keyboard shortcut:
+
+- **Cmd + B** (Mac) or **Ctrl + B** (Windows/Linux) - Toggle sidebar
+
+## State Persistence
+
+The sidebar state is automatically saved to a cookie (`sidebar_state`) and restored on page reload.
+
+Cookie details:
+- Name: `sidebar_state`
+- Max age: 7 days
+- Path: `/`
+
+## Mobile Behavior
+
+On mobile devices (detected via `useIsMobile` hook):
+- Sidebar renders as a Sheet (drawer)
+- Slides in from the side
+- Overlays the content
+- Controlled via `SidebarTrigger`
+
+## CSS Variables
+
+The sidebar system uses CSS variables for sizing:
+
+```css
+--sidebar-width: 16rem;         /* 256px - Desktop width */
+--sidebar-width-mobile: 18rem;  /* 288px - Mobile width */
+--sidebar-width-icon: 3rem;     /* 48px - Icon-only width */
+```
+
+## Accessibility
+
+- Keyboard navigation support
+- Focus management
+- ARIA attributes
+- Screen reader friendly
+- Tooltip support for collapsed items
+- Mobile drawer with proper semantics

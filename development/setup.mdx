@@ -1,0 +1,181 @@
+---
+title: Development Setup
+description: Set up your local development environment for the Money monorepo
+---
+
+## Prerequisites
+
+Before you begin, ensure you have the following tools installed on your system:
+
+### Required Tools
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js" href="https://nodejs.org">
+    Version 18 or higher required
+  </Card>
+  <Card title="pnpm" icon="package" href="https://pnpm.io">
+    Version 9.0.0 for package management
+  </Card>
+  <Card title="MongoDB" icon="database" href="https://www.mongodb.com">
+    Local or Atlas cluster for database
+  </Card>
+  <Card title="Git" icon="git" href="https://git-scm.com">
+    For version control
+  </Card>
+</CardGroup>
+
+### Verify Installation
+
+Check that you have the correct versions installed:
+
+```bash
+node --version  # Should be v18 or higher
+pnpm --version  # Should be 9.0.0 or compatible
+```
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the Money monorepo to your local machine:
+
+    ```bash
+    git clone <repository-url>
+    cd money
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    Install all workspace dependencies using pnpm:
+
+    <CodeGroup>
+      ```bash pnpm
+      pnpm install
+      ```
+
+      ```bash npm
+      npm install
+      ```
+
+      ```bash yarn
+      yarn install
+      ```
+    </CodeGroup>
+
+    <Warning>
+      This project uses pnpm workspaces. While npm and yarn may work, pnpm is recommended for consistency with the `packageManager` field in package.json.
+    </Warning>
+  </Step>
+
+  <Step title="Set up environment variables">
+    Create `.env` files for each application that requires configuration. Start by copying the example file:
+
+    ```bash
+    # For CashGap app
+    cp apps/cashgap/.env.example apps/cashgap/.env
+
+    # For Secure app (if needed)
+    cp apps/cashgap/.env.example apps/secure/.env
+    ```
+
+    Then edit the `.env` files with your actual values. See [Environment Variables](/development/deployment/environment-variables) for details.
+  </Step>
+
+  <Step title="Set up MongoDB">
+    You'll need a MongoDB instance. Choose one of the following options:
+
+    **Option 1: MongoDB Atlas (Cloud)**
+    - Create a free cluster at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+    - Get your connection string and add it to your `.env` file
+
+    **Option 2: Local MongoDB**
+    ```bash
+    # Using Docker
+    docker run -d -p 27017:27017 --name mongodb mongo:latest
+    ```
+
+    Update your `MONGODB_URI` in `.env`:
+    ```bash
+    MONGODB_URI=mongodb://localhost:27017/money-dev
+    ```
+
+    See [Database Setup](/development/deployment/database-setup) for more details.
+  </Step>
+
+  <Step title="Verify setup">
+    Run a build to ensure everything is configured correctly:
+
+    ```bash
+    pnpm build
+    ```
+
+    If the build completes successfully, your environment is ready!
+  </Step>
+</Steps>
+
+## IDE Setup
+
+### VS Code (Recommended)
+
+Install the following extensions for the best development experience:
+
+- **ESLint** - For code linting
+- **Prettier** - For code formatting
+- **Tailwind CSS IntelliSense** - For Tailwind class autocompletion
+- **TypeScript and JavaScript** - Built-in, ensure it's enabled
+
+### TypeScript Configuration
+
+The monorepo uses TypeScript 5.9.2 with shared configurations:
+- Root `tsconfig.json` for workspace-wide settings
+- App-specific `tsconfig.json` files extending the base config
+- Shared TypeScript configurations in `packages/typescript-config`
+
+## Troubleshooting
+
+### pnpm install fails
+
+If you encounter issues during installation:
+
+1. Clear the pnpm cache:
+   ```bash
+   pnpm store prune
+   ```
+
+2. Delete `node_modules` and lock files:
+   ```bash
+   rm -rf node_modules pnpm-lock.yaml
+   pnpm install
+   ```
+
+### Node version mismatch
+
+If you see Node version errors, ensure you're using Node 18 or higher:
+
+```bash
+node --version
+```
+
+Consider using [nvm](https://github.com/nvm-sh/nvm) to manage Node versions:
+
+```bash
+nvm install 18
+nvm use 18
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Running Locally" icon="play" href="/development/running-locally">
+    Learn how to start the development servers
+  </Card>
+  <Card title="Building" icon="hammer" href="/development/building">
+    Understand the build process
+  </Card>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Run tests and ensure code quality
+  </Card>
+  <Card title="Environment Variables" icon="key" href="/development/deployment/environment-variables">
+    Configure environment variables
+  </Card>
+</CardGroup>

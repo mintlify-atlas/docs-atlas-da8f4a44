@@ -1,0 +1,137 @@
+---
+title: Auth Package Overview
+description: Flexible authentication components and hooks for React applications
+---
+
+The `@repo/auth` package provides a minimal, adapter-based authentication system for React applications. It's designed to work with any authentication backend through a simple adapter pattern.
+
+## Features
+
+- **Adapter-based architecture** - Works with any auth provider (Better Auth, NextAuth, Supabase, etc.)
+- **Pre-built UI components** - Login and register forms with built-in validation
+- **Type-safe hooks** - Fully typed React hooks for authentication operations
+- **Enhanced error handling** - User-friendly error messages with automatic filtering
+- **Loading states** - Built-in loading and error state management
+
+## Installation
+
+This package is part of the Money monorepo and is available as a workspace package:
+
+```bash
+pnpm add @repo/auth
+```
+
+## Package Contents
+
+The auth package exports the following:
+
+<CardGroup cols={2}>
+  <Card title="useAuth" icon="hook" href="#useauth-hook">
+    Core authentication hook with sign in, sign up, and sign out methods
+  </Card>
+  <Card title="LoginForm" icon="lock" href="#loginform-component">
+    Pre-built login form component with email/password fields
+  </Card>
+  <Card title="RegisterForm" icon="user-plus" href="#registerform-component">
+    Registration form with terms acceptance checkbox
+  </Card>
+  <Card title="AuthLayout" icon="layout" href="#authlayout-component">
+    Centered layout wrapper for authentication pages
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+### 1. Create an Adapter
+
+First, create an adapter for your authentication provider:
+
+```typescript
+import type { AuthAdapter } from '@repo/auth';
+
+const authAdapter: AuthAdapter = {
+  signIn: async (data) => {
+    // Your sign-in logic
+    await yourAuthProvider.signIn(data.email, data.password);
+  },
+  signUp: async (data) => {
+    // Your sign-up logic
+    await yourAuthProvider.signUp(data.email, data.password);
+  },
+  signOut: async () => {
+    // Your sign-out logic
+    await yourAuthProvider.signOut();
+  },
+};
+```
+
+### 2. Use Pre-built Forms
+
+```tsx
+import { AuthLayout, LoginForm } from '@repo/auth';
+import { authAdapter } from './auth-adapter';
+
+export default function LoginPage() {
+  return (
+    <AuthLayout>
+      <div className="bg-card rounded-2xl shadow-lg p-8">
+        <h2 className="text-3xl font-bold mb-2">Welcome back</h2>
+        <p className="text-muted-foreground mb-8">Sign in to your account</p>
+        <LoginForm 
+          adapter={authAdapter}
+          onSuccess={() => window.location.href = '/dashboard'}
+        />
+      </div>
+    </AuthLayout>
+  );
+}
+```
+
+### 3. Or Use the Hook Directly
+
+```tsx
+import { useAuth } from '@repo/auth';
+import { authAdapter } from './auth-adapter';
+
+function CustomLoginForm() {
+  const { loading, error, signIn } = useAuth({ adapter: authAdapter });
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await signIn({ email, password });
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Your custom form UI */}
+    </form>
+  );
+}
+```
+
+<Note>
+  The adapter pattern allows you to use any authentication backend without changing your UI code.
+</Note>
+
+## Architecture
+
+The package follows a simple, composable architecture:
+
+```
+@repo/auth/
+├── useAuth hook       → State management & API calls
+├── Components         → Pre-built UI (LoginForm, RegisterForm)
+├── AuthLayout         → Page wrapper for auth screens
+└── Types              → TypeScript definitions
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/packages/auth/configuration">
+    Learn about adapters and TypeScript types
+  </Card>
+  <Card title="Usage Guide" icon="book" href="/packages/auth/usage">
+    See real-world examples and patterns
+  </Card>
+</CardGroup>

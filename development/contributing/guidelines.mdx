@@ -1,0 +1,360 @@
+---
+title: Contributing Guidelines
+description: How to contribute to the Money monorepo project
+---
+
+## Welcome Contributors
+
+Thank you for your interest in contributing to the Money monorepo! This document provides guidelines and best practices for contributing to the project.
+
+## Getting Started
+
+Before you begin contributing:
+
+<Steps>
+  <Step title="Set up your environment">
+    Follow the [Development Setup](/development/setup) guide to configure your local environment.
+  </Step>
+
+  <Step title="Understand the codebase">
+    Familiarize yourself with:
+    - Project structure and organization
+    - Existing code patterns and conventions
+    - [Code style guidelines](/development/contributing/code-style)
+  </Step>
+
+  <Step title="Find an issue or feature">
+    Look for:
+    - Issues labeled `good first issue` for beginners
+    - Issues labeled `help wanted` for broader contributions
+    - Or propose your own improvements
+  </Step>
+
+  <Step title="Discuss before major changes">
+    For significant changes:
+    - Open an issue to discuss your approach
+    - Get feedback from maintainers
+    - Ensure alignment with project goals
+  </Step>
+</Steps>
+
+## Types of Contributions
+
+We welcome various types of contributions:
+
+<CardGroup cols={2}>
+  <Card title="Bug Fixes" icon="bug">
+    Fix issues and improve stability
+  </Card>
+  <Card title="New Features" icon="sparkles">
+    Add new functionality and capabilities
+  </Card>
+  <Card title="Documentation" icon="book">
+    Improve docs, guides, and examples
+  </Card>
+  <Card title="Code Quality" icon="code">
+    Refactoring, optimization, and cleanup
+  </Card>
+  <Card title="Testing" icon="flask">
+    Add or improve tests
+  </Card>
+  <Card title="Performance" icon="gauge">
+    Optimize speed and efficiency
+  </Card>
+</CardGroup>
+
+## Contribution Workflow
+
+### 1. Fork and Clone
+
+Fork the repository and clone it locally:
+
+```bash
+# Fork via GitHub UI, then clone
+git clone https://github.com/YOUR-USERNAME/money.git
+cd money
+
+# Add upstream remote
+git remote add upstream https://github.com/ORIGINAL-OWNER/money.git
+```
+
+### 2. Create a Branch
+
+Create a descriptive branch for your changes:
+
+```bash
+# Feature branch
+git checkout -b feature/add-password-generator
+
+# Bug fix branch
+git checkout -b fix/authentication-error
+
+# Documentation branch
+git checkout -b docs/update-setup-guide
+```
+
+Branch naming conventions:
+- `feature/description` - New features
+- `fix/description` - Bug fixes
+- `docs/description` - Documentation updates
+- `refactor/description` - Code refactoring
+- `test/description` - Test additions/changes
+- `chore/description` - Maintenance tasks
+
+### 3. Make Your Changes
+
+Follow these guidelines while coding:
+
+<Steps>
+  <Step title="Write clean code">
+    - Follow the [Code Style](/development/contributing/code-style) guidelines
+    - Use TypeScript types properly
+    - Write self-documenting code with clear names
+    - Add comments for complex logic
+  </Step>
+
+  <Step title="Test your changes">
+    ```bash
+    # Run type checking
+    pnpm check-types
+
+    # Run linting
+    pnpm lint
+
+    # Test locally
+    pnpm dev --filter=your-app
+
+    # Build to verify
+    pnpm build --filter=your-app
+    ```
+  </Step>
+
+  <Step title="Keep changes focused">
+    - One logical change per commit
+    - Separate refactoring from feature changes
+    - Don't mix unrelated changes
+  </Step>
+
+  <Step title="Update documentation">
+    - Update relevant docs if behavior changes
+    - Add JSDoc comments for new functions
+    - Update README if applicable
+  </Step>
+</Steps>
+
+### 4. Commit Your Changes
+
+Write clear, descriptive commit messages:
+
+```bash
+# Good commit messages
+git commit -m "feat: add password strength indicator"
+git commit -m "fix: resolve authentication timeout issue"
+git commit -m "docs: update environment variables guide"
+git commit -m "refactor: simplify database connection logic"
+
+# Bad commit messages
+git commit -m "update"
+git commit -m "fix stuff"
+git commit -m "changes"
+```
+
+#### Commit Message Format
+
+```
+type(scope): subject
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation changes
+- `style` - Code style/formatting (no logic change)
+- `refactor` - Code refactoring
+- `perf` - Performance improvements
+- `test` - Adding or updating tests
+- `chore` - Maintenance tasks
+- `ci` - CI/CD changes
+
+**Examples:**
+
+```bash
+feat(auth): add two-factor authentication support
+
+Implements TOTP-based 2FA using the authenticator app.
+Includes QR code generation and backup codes.
+
+Closes #123
+```
+
+```bash
+fix(secure): prevent XSS in password notes field
+
+Sanitize user input before rendering to prevent XSS attacks.
+Add additional validation on the backend.
+```
+
+### 5. Push and Create Pull Request
+
+```bash
+# Push your branch
+git push origin feature/your-feature-name
+```
+
+Then create a pull request on GitHub. See [Pull Request Guidelines](/development/contributing/pull-requests) for details.
+
+## Code Review Process
+
+All contributions go through code review:
+
+<Steps>
+  <Step title="Automated checks">
+    CI/CD pipelines will run:
+    - Type checking
+    - Linting
+    - Build verification
+    - Tests (when available)
+  </Step>
+
+  <Step title="Maintainer review">
+    A maintainer will review your code for:
+    - Code quality and style
+    - Logic and correctness
+    - Performance implications
+    - Security considerations
+    - Documentation completeness
+  </Step>
+
+  <Step title="Address feedback">
+    - Respond to review comments
+    - Make requested changes
+    - Push updates to your branch
+    - Re-request review when ready
+  </Step>
+
+  <Step title="Approval and merge">
+    Once approved:
+    - Maintainer will merge your PR
+    - Your changes will be deployed
+    - You'll be credited in release notes
+  </Step>
+</Steps>
+
+## Code Quality Standards
+
+All contributions must meet these standards:
+
+### TypeScript
+
+- ✅ All code must be properly typed
+- ✅ No `any` types without justification
+- ✅ Pass `pnpm check-types` without errors
+- ✅ Use interfaces for object shapes
+- ✅ Use type guards for runtime validation
+
+### Linting
+
+- ✅ Pass `pnpm lint` with zero warnings
+- ✅ Follow ESLint rules
+- ✅ Fix auto-fixable issues: `pnpm lint -- --fix`
+- ✅ No disabled rules without explanation
+
+### Code Style
+
+- ✅ Follow [Code Style](/development/contributing/code-style) guidelines
+- ✅ Use Prettier for formatting: `pnpm format`
+- ✅ Consistent naming conventions
+- ✅ Clear and readable code
+
+### Testing
+
+- ✅ Test changes manually in browser
+- ✅ Verify builds succeed: `pnpm build`
+- ✅ Check for console errors
+- ✅ Test edge cases and error scenarios
+
+## What We Look For
+
+Good contributions typically have:
+
+✅ **Clear purpose** - Solves a specific problem or adds defined value
+
+✅ **Quality code** - Well-written, maintainable, follows conventions
+
+✅ **Proper testing** - Verified to work correctly
+
+✅ **Documentation** - Code is documented, guides updated
+
+✅ **Focused scope** - Does one thing well
+
+✅ **No breaking changes** - Or clearly documented if necessary
+
+## What to Avoid
+
+❌ **Large, unfocused PRs** - Break into smaller, logical changes
+
+❌ **Breaking changes without discussion** - Discuss first
+
+❌ **Incomplete features** - Ensure functionality is complete
+
+❌ **Poor code quality** - Follow style guide and best practices
+
+❌ **Missing documentation** - Update docs with changes
+
+❌ **Unrelated changes** - Keep PRs focused
+
+## Getting Help
+
+If you need help:
+
+- 💬 **Ask questions** in GitHub issues
+- 📖 **Read the docs** for guidance
+- 🔍 **Search existing issues** for similar problems
+- 👥 **Reach out to maintainers** for major contributions
+
+## Recognition
+
+Contributors are recognized in:
+
+- GitHub contributors list
+- Release notes and changelogs
+- Project documentation (when appropriate)
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the same license as the project.
+
+## Code of Conduct
+
+Be respectful and professional:
+
+- ✅ Be welcoming and inclusive
+- ✅ Respect differing viewpoints
+- ✅ Accept constructive criticism gracefully
+- ✅ Focus on what's best for the project
+- ❌ No harassment, discrimination, or unprofessional behavior
+
+## Thank You!
+
+Your contributions help make this project better for everyone. We appreciate your time and effort!
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Code Style" icon="paintbrush" href="/development/contributing/code-style">
+    Learn the project's code style conventions
+  </Card>
+  <Card title="Pull Requests" icon="git-pull-request" href="/development/contributing/pull-requests">
+    How to create great pull requests
+  </Card>
+  <Card title="Development Setup" icon="gear" href="/development/setup">
+    Set up your development environment
+  </Card>
+  <Card title="Running Locally" icon="play" href="/development/running-locally">
+    Start coding and testing
+  </Card>
+</CardGroup>

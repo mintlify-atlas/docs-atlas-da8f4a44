@@ -1,0 +1,378 @@
+---
+title: Testing
+description: Testing strategies and practices for the Money monorepo
+---
+
+## Testing Overview
+
+The Money monorepo emphasizes code quality and reliability. While comprehensive test coverage is still being developed, this guide outlines testing best practices and available testing approaches.
+
+## Available Testing Commands
+
+### Type Checking
+
+TypeScript serves as the first line of defense against bugs:
+
+<CodeGroup>
+  ```bash Root Level
+  pnpm check-types
+  ```
+
+  ```bash Individual App
+  cd apps/secure
+  pnpm check-types
+  ```
+</CodeGroup>
+
+Type checking:
+- Runs `tsc --noEmit` to check for TypeScript errors
+- Validates type correctness without emitting files
+- Catches type mismatches, missing properties, and more
+
+### Linting
+
+ESLint ensures code quality and consistency:
+
+<CodeGroup>
+  ```bash Root Level
+  pnpm lint
+  ```
+
+  ```bash Fix Issues
+  pnpm lint -- --fix
+  ```
+
+  ```bash Individual App
+  cd apps/web
+  pnpm lint
+  ```
+</CodeGroup>
+
+Linting checks:
+- Code style and formatting issues
+- Potential bugs and anti-patterns
+- React and Next.js best practices
+- Accessibility issues
+
+### Format Checking
+
+Prettier maintains consistent code formatting:
+
+```bash
+# Format all files
+pnpm format
+
+# Check formatting without making changes
+pnpm prettier --check "**/*.{ts,tsx,md}"
+```
+
+## Testing Strategy
+
+<Steps>
+  <Step title="Type Safety First">
+    Use TypeScript's type system to catch errors at compile time:
+
+    ```bash
+    pnpm check-types
+    ```
+
+    Ensure all type errors are resolved before committing code.
+  </Step>
+
+  <Step title="Lint for Quality">
+    Run ESLint to catch potential issues:
+
+    ```bash
+    pnpm lint
+    ```
+
+    The configuration enforces `--max-warnings 0` for web, docs, and cashgap apps.
+  </Step>
+
+  <Step title="Manual Testing">
+    Test functionality manually in the browser:
+
+    ```bash
+    pnpm dev --filter=secure
+    ```
+
+    Verify:
+    - User flows work as expected
+    - Forms validate correctly
+    - Authentication and authorization work
+    - Database operations succeed
+  </Step>
+
+  <Step title="Build Validation">
+    Ensure the production build succeeds:
+
+    ```bash
+    pnpm build
+    ```
+
+    A successful build indicates no build-time errors.
+  </Step>
+</Steps>
+
+## Testing Best Practices
+
+### Code Review Checklist
+
+Before submitting code for review:
+
+- [ ] All TypeScript errors resolved (`pnpm check-types`)
+- [ ] No linting errors or warnings (`pnpm lint`)
+- [ ] Code is properly formatted (`pnpm format`)
+- [ ] Production build succeeds (`pnpm build`)
+- [ ] Tested functionality manually in browser
+- [ ] Verified database operations (if applicable)
+- [ ] Checked for console errors or warnings
+
+### Type Safety Guidelines
+
+**Use strict types**
+
+```typescript
+// Good
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+function getUser(id: string): Promise<User> {
+  // ...
+}
+
+// Avoid
+function getUser(id: any): any {
+  // ...
+}
+```
+
+**Avoid `any` types**
+
+Use specific types or `unknown` when type is truly unknown:
+
+```typescript
+// Instead of any
+function processData(data: any) { }
+
+// Use specific types
+interface ApiResponse {
+  status: number;
+  data: unknown;
+}
+
+function processData(data: ApiResponse) { }
+```
+
+**Use type guards**
+
+```typescript
+function isUser(obj: unknown): obj is User {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'id' in obj &&
+    'email' in obj
+  );
+}
+```
+
+## Future Testing Additions
+
+The following testing capabilities are planned for future implementation:
+
+### Unit Testing
+
+Planned framework: Jest or Vitest
+
+- Test individual functions and components
+- Mock dependencies and external services
+- Fast, isolated test execution
+
+### Integration Testing
+
+Planned tools: Playwright or Cypress
+
+- Test user workflows end-to-end
+- Verify database operations
+- Test API endpoints
+- Validate authentication flows
+
+### Component Testing
+
+Planned framework: React Testing Library
+
+- Test React components in isolation
+- Verify component behavior and rendering
+- Test user interactions
+- Ensure accessibility
+
+## Pre-commit Hooks
+
+Consider setting up Git hooks to run checks automatically:
+
+### Using Husky
+
+```bash
+# Install husky
+pnpm add -D husky
+pnpm exec husky install
+```
+
+### Pre-commit Hook Example
+
+```bash
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Run type checking
+pnpm check-types || exit 1
+
+# Run linting
+pnpm lint || exit 1
+
+# Run formatting check
+pnpm prettier --check "**/*.{ts,tsx,md}" || exit 1
+```
+
+## CI/CD Testing
+
+Example GitHub Actions workflow:
+
+```yaml
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9.0.0
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Type check
+        run: pnpm check-types
+      
+      - name: Lint
+        run: pnpm lint
+      
+      - name: Format check
+        run: pnpm prettier --check "**/*.{ts,tsx,md}"
+      
+      - name: Build
+        run: pnpm build
+```
+
+## Debugging
+
+### Chrome DevTools
+
+For browser-based debugging:
+
+1. Start the dev server:
+   ```bash
+   pnpm dev --filter=secure
+   ```
+
+2. Open Chrome DevTools (F12)
+3. Use the Sources panel to set breakpoints
+4. Use the Console to inspect variables and execute code
+
+### VS Code Debugger
+
+Create `.vscode/launch.json`:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js: debug server-side",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm dev --filter=secure"
+    },
+    {
+      "name": "Next.js: debug client-side",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000"
+    }
+  ]
+}
+```
+
+### Node.js Debugger
+
+For server-side debugging:
+
+```bash
+NODE_OPTIONS='--inspect' pnpm dev --filter=secure
+```
+
+Then attach your debugger to the process.
+
+## Common Issues
+
+### Type Errors in Third-Party Packages
+
+If you encounter type errors from dependencies:
+
+```bash
+# Update type definitions
+pnpm add -D @types/package-name
+
+# Or skip lib check (not recommended)
+# In tsconfig.json:
+# "skipLibCheck": true
+```
+
+### ESLint Errors
+
+To disable specific rules (use sparingly):
+
+```typescript
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const data: any = {};
+```
+
+### Build Succeeds but Runtime Errors
+
+This usually indicates:
+- Missing environment variables
+- Database connection issues
+- External service failures
+
+Check the console and server logs for details.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Contributing Guidelines" icon="code-pull-request" href="/development/contributing/guidelines">
+    Learn how to contribute to the project
+  </Card>
+  <Card title="Code Style" icon="paintbrush" href="/development/contributing/code-style">
+    Follow the project's code style
+  </Card>
+  <Card title="Pull Requests" icon="git-pull-request" href="/development/contributing/pull-requests">
+    Submit your changes
+  </Card>
+  <Card title="Building" icon="hammer" href="/development/building">
+    Build for production
+  </Card>
+</CardGroup>

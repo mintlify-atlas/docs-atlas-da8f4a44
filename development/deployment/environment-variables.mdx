@@ -1,0 +1,404 @@
+---
+title: Environment Variables
+description: Complete reference for environment variables in the Money monorepo
+---
+
+## Overview
+
+Environment variables configure the Money monorepo applications for different environments. Variables are stored in `.env` files locally and configured through your deployment platform in production.
+
+<Warning>
+  Never commit `.env` files containing real credentials to version control. Use `.env.example` as a template and add `.env` to `.gitignore`.
+</Warning>
+
+## Getting Started
+
+Copy the example environment file:
+
+```bash
+# For CashGap app
+cp apps/cashgap/.env.example apps/cashgap/.env
+
+# For Secure app
+cp apps/cashgap/.env.example apps/secure/.env
+```
+
+Then edit the `.env` file with your actual values.
+
+## Variable Categories
+
+### Database
+
+MongoDB connection configuration:
+
+#### `MONGODB_URI`
+
+- **Required**: Yes (for secure and cashgap apps)
+- **Used by**: Secure, CashGap
+- **Description**: MongoDB connection string
+- **Example**: `mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority`
+- **Local dev**: `mongodb://localhost:27017/money-dev`
+- **Production**: Use MongoDB Atlas or managed instance
+
+<Warning>
+  Ensure your MongoDB instance is accessible from your deployment environment. Configure IP whitelist or VPC peering as needed.
+</Warning>
+
+### Authentication & Security
+
+Secrets for JWT tokens and NextAuth:
+
+#### `JWT_SECRET`
+
+- **Required**: Yes (for secure and cashgap apps)
+- **Used by**: Secure, CashGap
+- **Description**: Secret key for signing JWT access tokens
+- **Generation**: `openssl rand -base64 32`
+- **Example**: `your-jwt-secret-key-here-make-it-long-and-random`
+
+#### `JWT_REFRESH_SECRET`
+
+- **Required**: Yes (for secure app)
+- **Used by**: Secure
+- **Description**: Secret key for signing JWT refresh tokens
+- **Generation**: `openssl rand -base64 32`
+- **Example**: `your-refresh-secret-key-here-make-it-different`
+
+<Warning>
+  Use a different secret for refresh tokens than access tokens. Never reuse secrets across environments.
+</Warning>
+
+#### `AUTH_SECRET`
+
+- **Required**: Yes (for secure and cashgap apps)
+- **Used by**: Secure, CashGap (NextAuth)
+- **Description**: Secret for NextAuth.js session encryption
+- **Generation**: `openssl rand -base64 32`
+- **Example**: `your-nextauth-secret-key-here-generate-with-openssl-rand-base64-32`
+- **Aliases**: May also be called `NEXTAUTH_SECRET` in some contexts
+
+### OAuth Integration
+
+Google Sign-In configuration:
+
+#### `GOOGLE_CLIENT_ID`
+
+- **Required**: No (optional for Google OAuth)
+- **Used by**: Secure, CashGap
+- **Description**: Google OAuth 2.0 client ID
+- **Where to get**: [Google Cloud Console](https://console.developers.google.com/apis/credentials)
+- **Example**: `your-google-client-id-here.apps.googleusercontent.com`
+
+#### `GOOGLE_CLIENT_SECRET`
+
+- **Required**: No (optional, but required if using Google OAuth)
+- **Used by**: Secure, CashGap
+- **Description**: Google OAuth 2.0 client secret
+- **Where to get**: [Google Cloud Console](https://console.developers.google.com/apis/credentials)
+- **Example**: `GOCSPX-your-google-client-secret-here`
+
+<Steps>
+  <Step title="Create OAuth credentials">
+    Go to [Google Cloud Console](https://console.developers.google.com/apis/credentials)
+  </Step>
+  <Step title="Create OAuth 2.0 Client ID">
+    Choose "Web application" as application type
+  </Step>
+  <Step title="Configure authorized redirect URIs">
+    Add:
+    - `http://localhost:3000/api/auth/callback/google` (development)
+    - `https://your-domain.com/api/auth/callback/google` (production)
+  </Step>
+  <Step title="Copy credentials">
+    Copy the Client ID and Client Secret to your `.env` file
+  </Step>
+</Steps>
+
+### Application URLs
+
+Public-facing URLs and CORS configuration:
+
+#### `NEXT_PUBLIC_APP_URL`
+
+- **Required**: Yes
+- **Used by**: All apps
+- **Description**: Public URL where the app is accessible
+- **Local dev**: `http://localhost:3000`
+- **Production**: `https://your-domain.com`
+- **Note**: `NEXT_PUBLIC_` prefix makes it available in browser
+
+#### `ALLOWED_ORIGIN`
+
+- **Required**: Yes
+- **Used by**: Secure (API CORS configuration)
+- **Description**: Allowed origin for CORS requests
+- **Local dev**: `http://localhost:3000`
+- **Production**: `https://your-domain.com`
+- **Multiple origins**: Use comma-separated list (requires code changes)
+
+### Email Configuration
+
+SMTP settings for sending emails:
+
+#### `SMTP_HOST`
+
+- **Required**: No (optional for email features)
+- **Used by**: Secure, CashGap
+- **Description**: SMTP server hostname
+- **Example**: `smtp.gmail.com`
+- **Default**: `smtp.gmail.com`
+
+#### `SMTP_PORT`
+
+- **Required**: No
+- **Used by**: Secure, CashGap
+- **Description**: SMTP server port
+- **Example**: `587` (STARTTLS) or `465` (SSL)
+- **Default**: `587`
+
+#### `SMTP_SECURE`
+
+- **Required**: No
+- **Used by**: Secure, CashGap
+- **Description**: Use SSL/TLS for SMTP connection
+- **Values**: `true` or `false`
+- **Default**: `false` (uses STARTTLS on port 587)
+
+#### `SMTP_USER`
+
+- **Required**: No (required if SMTP enabled)
+- **Used by**: Secure, CashGap
+- **Description**: SMTP authentication username
+- **Example**: `your-email@gmail.com`
+
+#### `SMTP_PASSWORD`
+
+- **Required**: No (required if SMTP enabled)
+- **Used by**: Secure, CashGap
+- **Description**: SMTP authentication password
+- **Gmail**: Use [App Password](https://myaccount.google.com/apppasswords), not your account password
+- **Example**: `your-app-password-here`
+
+#### `SMTP_FROM`
+
+- **Required**: No
+- **Used by**: Secure, CashGap
+- **Description**: "From" address for sent emails
+- **Example**: `noreply@yourdomain.com`
+- **Default**: Falls back to `SMTP_USER` if not set
+
+<Warning>
+  For Gmail, you must use an App Password, not your regular account password. Generate one at [Google App Passwords](https://myaccount.google.com/apppasswords).
+</Warning>
+
+### Environment Control
+
+#### `NODE_ENV`
+
+- **Required**: Auto-set by framework
+- **Used by**: All apps
+- **Description**: Node.js environment mode
+- **Values**: `development`, `production`, `test`
+- **Set by**: Next.js automatically
+- **Production**: Set to `production` for optimizations
+
+## Environment-Specific Configuration
+
+### Development (`.env.local`)
+
+```bash
+# Database
+MONGODB_URI=mongodb://localhost:27017/money-dev
+
+# Secrets (generate unique ones for dev)
+JWT_SECRET=dev-jwt-secret-generate-with-openssl
+JWT_REFRESH_SECRET=dev-refresh-secret-different-from-above
+AUTH_SECRET=dev-auth-secret-for-nextauth
+
+# URLs
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+ALLOWED_ORIGIN=http://localhost:3000
+
+# OAuth (optional)
+GOOGLE_CLIENT_ID=your-dev-google-client-id
+GOOGLE_CLIENT_SECRET=your-dev-google-secret
+
+# Email (optional for local dev)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-dev-email@gmail.com
+SMTP_PASSWORD=your-dev-app-password
+SMTP_FROM=noreply@localhost
+```
+
+### Production
+
+```bash
+# Database
+MONGODB_URI=mongodb+srv://prod-user:strong-password@prod-cluster.mongodb.net/money-prod?retryWrites=true&w=majority
+
+# Secrets (STRONG random values)
+JWT_SECRET=<64-char-random-string>
+JWT_REFRESH_SECRET=<different-64-char-random-string>
+AUTH_SECRET=<64-char-random-string>
+
+# URLs
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+ALLOWED_ORIGIN=https://your-domain.com
+
+# OAuth
+GOOGLE_CLIENT_ID=prod-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-prod-secret
+
+# Email
+SMTP_HOST=smtp.sendgrid.net
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=apikey
+SMTP_PASSWORD=your-sendgrid-api-key
+SMTP_FROM=noreply@yourdomain.com
+
+# Environment
+NODE_ENV=production
+```
+
+## Turbo.json Environment Variables
+
+These variables are declared in `turbo.json` as dependencies for the build task:
+
+```json
+{
+  "tasks": {
+    "build": {
+      "env": [
+        "MONGODB_URI",
+        "JWT_SECRET",
+        "JWT_REFRESH_SECRET",
+        "AUTH_SECRET",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "NEXT_PUBLIC_APP_URL",
+        "ALLOWED_ORIGIN",
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "SMTP_SECURE",
+        "SMTP_USER",
+        "SMTP_PASSWORD",
+        "SMTP_FROM",
+        "NODE_ENV"
+      ]
+    }
+  }
+}
+```
+
+These variables affect the build output and must be available during build time.
+
+## Setting Variables by Platform
+
+### Vercel
+
+1. Go to Project Settings → Environment Variables
+2. Add each variable with its value
+3. Select environments: Production, Preview, Development
+4. Save changes
+5. Redeploy to apply
+
+### Docker
+
+Pass via command line:
+
+```bash
+docker run -e MONGODB_URI="..." -e JWT_SECRET="..." my-app
+```
+
+Or use env file:
+
+```bash
+docker run --env-file .env.production my-app
+```
+
+### Docker Compose
+
+```yaml
+services:
+  app:
+    image: my-app
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+```
+
+## Security Best Practices
+
+<Warning>
+  Follow these security practices to protect your application:
+</Warning>
+
+1. **Never commit secrets**: Add `.env` to `.gitignore`
+2. **Use strong secrets**: Generate with `openssl rand -base64 32` or longer
+3. **Rotate secrets regularly**: Change secrets periodically
+4. **Use different secrets per environment**: Don't reuse dev secrets in production
+5. **Restrict access**: Use secrets management tools (AWS Secrets Manager, Vault, etc.)
+6. **Monitor usage**: Track who accesses sensitive variables
+7. **Use environment-specific credentials**: Separate dev/staging/prod databases
+
+## Generating Secure Secrets
+
+```bash
+# Generate a random secret (32 bytes, base64 encoded)
+openssl rand -base64 32
+
+# Generate multiple secrets at once
+echo "JWT_SECRET=$(openssl rand -base64 32)"
+echo "JWT_REFRESH_SECRET=$(openssl rand -base64 32)"
+echo "AUTH_SECRET=$(openssl rand -base64 32)"
+```
+
+## Troubleshooting
+
+### Variables Not Loading
+
+1. Check file name is exactly `.env` or `.env.local`
+2. Ensure file is in the app directory (e.g., `apps/secure/.env`)
+3. Restart dev server after adding variables
+4. Check for typos in variable names
+
+### Build Fails with Missing Variables
+
+1. Check `turbo.json` lists the variable
+2. Ensure variable is set in build environment
+3. For `NEXT_PUBLIC_*` variables, they must be set at build time
+
+### Database Connection Fails
+
+1. Verify `MONGODB_URI` is correct
+2. Check IP whitelist in MongoDB Atlas
+3. Ensure database user has correct permissions
+4. Test connection string with MongoDB Compass
+
+### OAuth Not Working
+
+1. Verify redirect URIs match exactly (including protocol and port)
+2. Check client ID and secret are correct
+3. Ensure OAuth consent screen is configured
+4. Check authorized domains include your domain
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Database Setup" icon="database" href="/development/deployment/database-setup">
+    Configure MongoDB for production
+  </Card>
+  <Card title="Deployment Overview" icon="rocket" href="/development/deployment/overview">
+    Deploy your applications
+  </Card>
+  <Card title="Setup Guide" icon="gear" href="/development/setup">
+    Initial development setup
+  </Card>
+  <Card title="Building" icon="hammer" href="/development/building">
+    Build process details
+  </Card>
+</CardGroup>

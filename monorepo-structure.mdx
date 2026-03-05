@@ -1,0 +1,755 @@
+---
+title: Monorepo Structure
+description: Understanding the organization of apps and packages in the Money monorepo
+---
+
+The Money monorepo is organized using Turborepo and pnpm workspaces, with a clear separation between applications and shared packages.
+
+## Overview
+
+The workspace is defined in `pnpm-workspace.yaml`:
+
+```yaml pnpm-workspace.yaml
+packages:
+  - "apps/*"
+  - "packages/*"
+```
+
+This structure allows for:
+
+- **Shared dependencies**: Common packages used across multiple apps
+- **Code reuse**: UI components, utilities, and auth logic shared between apps
+- **Efficient builds**: Turborepo caches builds and runs tasks in parallel
+- **Type safety**: TypeScript configurations shared via `@repo/typescript-config`
+
+## Directory Structure
+
+```
+money/
+├── apps/
+│   ├── cashgap/      # Full-featured expense tracking app
+│   ├── docs/         # Documentation site
+│   ├── secure/       # Security-focused app with 2FA
+│   └── web/          # Marketing/landing page
+├── packages/
+│   ├── auth/         # Shared authentication components
+│   ├── eslint-config/# ESLint configuration presets
+│   ├── typescript-config/  # TypeScript configurations
+│   └── ui/           # Shared UI component library
+├── scripts/          # Utility scripts
+├── .nvmrc           # Node version (24)
+├── package.json     # Root workspace configuration
+├── pnpm-lock.yaml   # Locked dependency versions
+├── pnpm-workspace.yaml  # Workspace definition
+└── turbo.json       # Turborepo task configuration
+```
+
+## Applications (`apps/`)
+
+The monorepo contains four Next.js applications, each serving a distinct purpose.
+
+### Cashgap
+
+<Card title="apps/cashgap" icon="wallet">
+  A comprehensive expense tracking and financial management application
+</Card>
+
+**Purpose**: Full-featured financial tracking with income, expenses, and subscriptions
+
+**Key Features**:
+- User authentication with NextAuth.js
+- MongoDB integration for data persistence
+- Dashboard with financial overview
+- Expense and income tracking
+- Subscription management
+- Email notifications via Nodemailer
+
+**Technology Stack**:
+```json package.json
+{
+  "dependencies": {
+    "next": "16.1.0",
+    "react": "^19.2.0",
+    "next-auth": "5.0.0-beta.30",
+    "@auth/mongodb-adapter": "^3.11.1",
+    "mongodb": "^7.0.0",
+    "mongoose": "^9.1.4",
+    "@repo/ui": "workspace:*",
+    "@repo/auth": "workspace:*",
+    "@tanstack/react-query": "^5.80.6",
+    "zod": "^4.3.5",
+    "zustand": "^5.0.10"
+  }
+}
+```
+
+**Routes**:
+- `/` - Landing page
+- `/(auth)/login` - Login page
+- `/(auth)/register` - Registration page
+- `/(dashboard)/dashboard` - Main dashboard
+- `/expenses` - Expense management
+- `/income` - Income tracking
+- `/subscriptions` - Subscription management
+- `/settings` - User settings
+- `/api/*` - API routes
+
+**Dev Server**: `pnpm --filter cashgap dev`
+
+---
+
+### Secure
+
+<Card title="apps/secure" icon="shield">
+  Security-focused application with advanced authentication features
+</Card>
+
+**Purpose**: Demonstrates secure authentication patterns including 2FA
+
+**Key Features**:
+- Two-factor authentication (2FA)
+- QR code generation for authenticator apps
+- Session management with JWT
+- User profile with avatar support
+- Data visualization with Recharts
+- Advanced security monitoring
+
+**Technology Stack**:
+```json package.json
+{
+  "dependencies": {
+    "next": "16.1.3",
+    "react": "19.2.3",
+    "next-auth": "5.0.0-beta.30",
+    "jose": "^6.1.3",
+    "qrcode.react": "^4.2.0",
+    "recharts": "^3.7.0",
+    "@repo/ui": "workspace:*",
+    "@repo/auth": "workspace:*"
+  }
+}
+```
+
+**Dev Server**: `pnpm --filter secure dev`
+
+---
+
+### Web
+
+<Card title="apps/web" icon="browser">
+  Marketing website and landing page
+</Card>
+
+**Purpose**: Public-facing website with product information
+
+**Key Features**:
+- Server-side rendering
+- Optimized for SEO
+- Minimal dependencies
+- Fast page loads
+- Tailwind CSS v4 styling
+
+**Technology Stack**:
+```json package.json
+{
+  "dependencies": {
+    "next": "16.1.0",
+    "react": "^19.2.0",
+    "@repo/ui": "workspace:*",
+    "tailwindcss": "^4.1.18",
+    "tw-animate-css": "^1.4.0"
+  }
+}
+```
+
+**Dev Server**: `pnpm --filter web dev`
+
+---
+
+### Docs
+
+<Card title="apps/docs" icon="book">
+  Documentation website
+</Card>
+
+**Purpose**: Developer documentation and guides
+
+**Dev Server**: `pnpm --filter docs dev`
+
+## Shared Packages (`packages/`)
+
+### @repo/ui
+
+<Card title="packages/ui" icon="palette">
+  Shared component library built on Radix UI and Tailwind CSS
+</Card>
+
+**Exports**: The package provides granular exports for tree-shaking:
+
+```json package.json
+{
+  "exports": {
+    ".": "./src/index.ts",
+    "./button": "./src/button.tsx",
+    "./input": "./src/input.tsx",
+    "./card": "./src/card.tsx",
+    "./loading": "./src/loading.tsx",
+    "./modal": "./src/modal.tsx",
+    "./skeleton": "./src/skeleton.tsx",
+    "./separator": "./src/separator.tsx",
+    "./tooltip": "./src/tooltip.tsx",
+    "./sheet": "./src/sheet.tsx",
+    "./checkbox": "./src/checkbox.tsx",
+    "./select": "./src/select.tsx",
+    "./sidebar": "./src/sidebar.tsx",
+    "./dashboard-wrapper": "./src/dashboard-wrapper.tsx",
+    "./nav-user": "./src/nav-user.tsx",
+    "./toast": "./src/toast.tsx",
+    "./avatar": "./src/avatar.tsx",
+    "./dropdown-menu": "./src/dropdown-menu.tsx",
+    "./breadcrumb": "./src/breadcrumb.tsx",
+    "./collapsible": "./src/collapsible.tsx",
+    "./use-mobile": "./src/use-mobile.ts",
+    "./utils": "./src/utils.ts",
+    "./globals.css": "./src/globals.css"
+  }
+}
+```
+
+**Example Component** (`button.tsx`):
+
+```tsx packages/ui/src/button.tsx
+"use client";
+
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
+import { cn } from "./utils";
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all...",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-white hover:bg-destructive/90",
+        outline: "border bg-background shadow-xs hover:bg-accent",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md gap-1.5 px-3",
+        lg: "h-10 rounded-md px-6",
+        xl: "h-11 rounded-xl px-6",
+        icon: "size-9",
+      },
+    },
+  },
+);
+
+function Button({ className, variant, size, asChild, isLoading, ...props }) {
+  const Comp = asChild ? Slot : "button";
+  
+  return (
+    <Comp
+      className={cn(buttonVariants({ variant, size, className }))}
+      disabled={props.disabled || isLoading}
+      {...props}
+    >
+      {isLoading && <Loader2 className="size-4 animate-spin" />}
+      {props.children}
+    </Comp>
+  );
+}
+```
+
+**Usage in Apps**:
+
+```tsx
+import { Button } from "@repo/ui/button";
+import { Input } from "@repo/ui/input";
+
+export default function MyForm() {
+  return (
+    <form>
+      <Input placeholder="Email" />
+      <Button variant="default" size="lg">Submit</Button>
+    </form>
+  );
+}
+```
+
+**Key Dependencies**:
+- `@radix-ui/*` - Accessible component primitives
+- `class-variance-authority` - Type-safe variant management
+- `lucide-react` - Icon library
+- `tailwind-merge` - Merge Tailwind classes intelligently
+
+---
+
+### @repo/auth
+
+<Card title="packages/auth" icon="lock">
+  Shared authentication components and hooks
+</Card>
+
+**Exports**:
+
+```json package.json
+{
+  "exports": {
+    ".": "./src/index.ts",
+    "./login": "./src/login.tsx",
+    "./register": "./src/register.tsx",
+    "./layout": "./src/auth-layout.tsx",
+    "./use-auth": "./src/use-auth.ts"
+  }
+}
+```
+
+**useAuth Hook** (`use-auth.ts`):
+
+```tsx packages/auth/src/use-auth.ts
+import { useState, useCallback } from "react";
+
+function getEnhancedErrorMessage(err: unknown): string {
+  if (!(err instanceof Error)) {
+    return "An unexpected error occurred";
+  }
+
+  const message = err.message.toLowerCase();
+
+  if (message.includes("csrf")) {
+    return "Session expired. Please refresh the page and try again.";
+  }
+
+  if (message.includes("failed to fetch")) {
+    return "Unable to connect. Please check your internet connection.";
+  }
+
+  return err.message;
+}
+
+export function useAuth({ adapter } = {}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const signIn = useCallback(
+    async (data: Record<string, any>) => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (adapter?.signIn) await adapter.signIn(data);
+      } catch (err) {
+        const enhancedError = new Error(getEnhancedErrorMessage(err));
+        setError(enhancedError);
+        throw enhancedError;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [adapter],
+  );
+
+  const signUp = useCallback(
+    async (data: Record<string, any>) => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (adapter?.signUp) await adapter.signUp(data);
+      } catch (err) {
+        const enhancedError = new Error(getEnhancedErrorMessage(err));
+        setError(enhancedError);
+        throw enhancedError;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [adapter],
+  );
+
+  const signOut = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (adapter?.signOut) await adapter.signOut();
+    } catch (err) {
+      const enhancedError = new Error(getEnhancedErrorMessage(err));
+      setError(enhancedError);
+      throw enhancedError;
+    } finally {
+      setLoading(false);
+    }
+  }, [adapter]);
+
+  return { loading, error, signIn, signOut, signUp };
+}
+```
+
+**Usage**:
+
+```tsx
+import { useAuth } from "@repo/auth/use-auth";
+import { LoginForm } from "@repo/auth/login";
+
+export default function LoginPage() {
+  const { loading, error, signIn } = useAuth({
+    adapter: {
+      signIn: async (data) => {
+        // Call your auth API
+        await fetch("/api/auth/signin", {
+          method: "POST",
+          body: JSON.stringify(data),
+        });
+      },
+    },
+  });
+
+  return <LoginForm onSubmit={signIn} loading={loading} error={error} />;
+}
+```
+
+---
+
+### @repo/eslint-config
+
+<Card title="packages/eslint-config" icon="shield-check">
+  Shared ESLint configurations for consistent code quality
+</Card>
+
+**Purpose**: Centralized linting rules for all apps and packages
+
+**Includes**:
+- `eslint-config-next` - Next.js specific rules
+- `eslint-config-prettier` - Prettier integration
+
+**Usage**: Apps reference it in their ESLint config:
+
+```json app/package.json
+{
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*"
+  }
+}
+```
+
+---
+
+### @repo/typescript-config
+
+<Card title="packages/typescript-config" icon="code">
+  Shared TypeScript configurations
+</Card>
+
+**Purpose**: Consistent TypeScript compiler options across the monorepo
+
+**Usage**: Apps extend base configs:
+
+```json tsconfig.json
+{
+  "extends": "@repo/typescript-config/nextjs.json",
+  "compilerOptions": {
+    // App-specific overrides
+  }
+}
+```
+
+## Scripts
+
+The `scripts/` directory contains utility scripts:
+
+### clear-databases.ts
+
+Utility script to reset MongoDB databases during development:
+
+```bash
+cd scripts
+pnpm install
+ts-node clear-databases.ts
+```
+
+### fix-dev-decryption.sh
+
+Bash script to resolve development decryption issues.
+
+## Turborepo Configuration
+
+The `turbo.json` file defines how tasks are executed:
+
+```json turbo.json
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "MONGODB_URI",
+        "JWT_SECRET",
+        "AUTH_SECRET",
+        "GOOGLE_CLIENT_ID",
+        "NEXT_PUBLIC_APP_URL"
+        // ... more env vars
+      ]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
+```
+
+**Key Features**:
+- `dependsOn: ["^build"]` - Build dependencies first
+- `outputs` - Cache Next.js build artifacts
+- `env` - Specify required environment variables
+- `cache: false` for dev - Don't cache development mode
+- `persistent: true` - Keep dev servers running
+
+## Dependency Management
+
+The monorepo uses pnpm workspaces with version pinning:
+
+```json package.json
+{
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  }
+}
+```
+
+### Workspace Protocol
+
+Shared packages use the `workspace:*` protocol:
+
+```json
+{
+  "dependencies": {
+    "@repo/ui": "workspace:*",
+    "@repo/auth": "workspace:*"
+  }
+}
+```
+
+This ensures apps always use the local version of shared packages.
+
+### Adding Dependencies
+
+<Tabs>
+  <Tab title="Root Dependencies">
+    ```bash
+    pnpm add -w <package>
+    ```
+  </Tab>
+  <Tab title="App Dependencies">
+    ```bash
+    pnpm add <package> --filter cashgap
+    ```
+  </Tab>
+  <Tab title="Dev Dependencies">
+    ```bash
+    pnpm add -D <package> --filter @repo/ui
+    ```
+  </Tab>
+</Tabs>
+
+## Design System
+
+The monorepo includes a comprehensive design system documented in `DESIGN_SYSTEM.md`:
+
+<CardGroup cols={2}>
+  <Card title="Color System" icon="palette">
+    OKLCH colors for perceptually uniform dark-first design
+  </Card>
+  
+  <Card title="Typography" icon="font">
+    Geist Sans font with consistent heading and body styles
+  </Card>
+  
+  <Card title="Components" icon="layer-group">
+    Buttons, inputs, cards, modals with standardized variants
+  </Card>
+  
+  <Card title="Layouts" icon="table-cells">
+    Auth pages, dashboards, and sidebar patterns
+  </Card>
+</CardGroup>
+
+**Key Principles**:
+1. **Dark-first** - Designed for dark mode primarily
+2. **Soft corners** - Large border-radius (20px+)
+3. **Subtle depth** - Light shadows and semi-transparent borders
+4. **Consistent spacing** - 4/8px grid system
+5. **Muted accents** - Color used sparingly for emphasis
+
+## Build Pipeline
+
+When you run `pnpm build`, Turborepo:
+
+1. **Analyzes dependencies** - Determines build order
+2. **Builds packages first** - `@repo/ui`, `@repo/auth`, configs
+3. **Builds apps** - In parallel when possible
+4. **Caches outputs** - Skips unchanged packages
+5. **Validates environment** - Checks required env vars
+
+**Build Graph**:
+
+```
+@repo/typescript-config  @repo/eslint-config
+         ↓                        ↓
+     @repo/ui  ←—————————————————┘
+         ↓
+    @repo/auth
+         ↓
+    ┌────┴────┬────────┬────────┐
+    ↓         ↓        ↓        ↓
+  web    cashgap   secure    docs
+```
+
+## Performance Optimization
+
+<CardGroup cols={2}>
+  <Card title="Parallel Execution" icon="gauge">
+    Turborepo runs independent tasks in parallel for faster builds
+  </Card>
+  
+  <Card title="Smart Caching" icon="database">
+    Build outputs are cached - only rebuild what changed
+  </Card>
+  
+  <Card title="Remote Caching" icon="cloud">
+    Share cache across team members with Vercel Remote Cache
+  </Card>
+  
+  <Card title="Incremental Builds" icon="forward">
+    Only affected apps rebuild when you change code
+  </Card>
+</CardGroup>
+
+## Common Patterns
+
+### Creating a New App
+
+<Steps>
+  <Step title="Create app directory">
+    ```bash
+    mkdir apps/new-app
+    cd apps/new-app
+    ```
+  </Step>
+  
+  <Step title="Initialize Next.js">
+    ```bash
+    pnpm create next-app@latest .
+    ```
+  </Step>
+  
+  <Step title="Add workspace dependencies">
+    ```json package.json
+    {
+      "dependencies": {
+        "@repo/ui": "workspace:*",
+        "@repo/auth": "workspace:*"
+      },
+      "devDependencies": {
+        "@repo/eslint-config": "workspace:*",
+        "@repo/typescript-config": "workspace:*"
+      }
+    }
+    ```
+  </Step>
+  
+  <Step title="Install dependencies">
+    ```bash
+    pnpm install
+    ```
+  </Step>
+</Steps>
+
+### Creating a New Package
+
+<Steps>
+  <Step title="Create package directory">
+    ```bash
+    mkdir packages/new-package
+    cd packages/new-package
+    ```
+  </Step>
+  
+  <Step title="Create package.json">
+    ```json package.json
+    {
+      "name": "@repo/new-package",
+      "version": "0.0.0",
+      "private": true,
+      "main": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+    ```
+  </Step>
+  
+  <Step title="Create source files">
+    ```bash
+    mkdir src
+    touch src/index.ts
+    ```
+  </Step>
+  
+  <Step title="Use in apps">
+    ```json app/package.json
+    {
+      "dependencies": {
+        "@repo/new-package": "workspace:*"
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Shared Code" icon="share-nodes">
+    Extract common code to packages - DRY principle
+  </Card>
+  
+  <Card title="Type Safety" icon="shield-check">
+    Use TypeScript extensively with strict mode enabled
+  </Card>
+  
+  <Card title="Granular Exports" icon="sitemap">
+    Export individual components for better tree-shaking
+  </Card>
+  
+  <Card title="Consistent Styling" icon="paintbrush">
+    Follow the design system patterns in all apps
+  </Card>
+</CardGroup>
+
+## Related Resources
+
+<CardGroup cols={3}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get up and running quickly
+  </Card>
+  
+  <Card title="Turborepo Docs" icon="book" href="https://turborepo.dev">
+    Learn more about Turborepo
+  </Card>
+  
+  <Card title="pnpm Workspaces" icon="box" href="https://pnpm.io/workspaces">
+    Deep dive into pnpm workspaces
+  </Card>
+</CardGroup>

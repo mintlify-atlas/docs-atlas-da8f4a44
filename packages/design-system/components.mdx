@@ -1,0 +1,405 @@
+---
+title: Components
+description: Pre-built UI component patterns and examples
+---
+
+The SecureVault Design System provides a collection of pre-built component patterns built with Tailwind CSS and Radix UI. These patterns ensure consistency across the application.
+
+## Buttons
+
+Buttons come in multiple variants with consistent styling.
+
+### Variants
+
+<CardGroup cols={2}>
+  <Card title="Primary" icon="square">
+    Filled background with primary color, used for main actions
+  </Card>
+  <Card title="Outline" icon="square">
+    Transparent with border, used for secondary actions
+  </Card>
+  <Card title="Ghost" icon="square">
+    Minimal styling, used for tertiary actions
+  </Card>
+  <Card title="Destructive" icon="triangle-exclamation">
+    Red variant for dangerous actions like delete
+  </Card>
+</CardGroup>
+
+### Examples
+
+```tsx
+// Primary (filled)
+<Button className="rounded-2xl h-11 px-6 shadow-lg shadow-primary/20">
+  Save Changes
+</Button>
+
+// Outline
+<Button variant="outline" className="rounded-xl">
+  Cancel
+</Button>
+
+// Ghost (minimal)
+<Button variant="ghost" size="icon">
+  <Settings className="h-4 w-4" />
+</Button>
+
+// Destructive
+<Button variant="destructive">
+  Delete Account
+</Button>
+```
+
+### Sizes
+
+```tsx
+// Default (h-9)
+<Button>Default</Button>
+
+// Large (h-10 or h-11)
+<Button className="h-11 px-6">
+  Large Button
+</Button>
+
+// Extra Large (h-12 - auth forms)
+<Button className="h-12 px-6">
+  Sign In
+</Button>
+
+// Icon only
+<Button variant="ghost" size="icon">
+  <Icon className="h-4 w-4" />
+</Button>
+```
+
+<Tip>
+  Add `shadow-lg shadow-primary/20` to primary buttons for a subtle glow effect.
+</Tip>
+
+## Inputs
+
+Form inputs with consistent styling and optional features.
+
+### Basic Input
+
+```tsx
+// With label
+<Input
+  label="Email"
+  placeholder="you@example.com"
+  className="h-12 rounded-xl"
+/>
+
+// With helper text
+<div className="space-y-2">
+  <label className="text-sm font-medium">Username</label>
+  <Input placeholder="Enter username" />
+  <p className="text-sm text-muted-foreground">Choose a unique username</p>
+</div>
+```
+
+### Input with Icon
+
+```tsx
+<div className="relative">
+  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+  <Input className="pl-12 h-12 rounded-xl" placeholder="Email" />
+</div>
+```
+
+### Password Input
+
+```tsx
+<PasswordInput
+  label="Password"
+  showStrength
+  strength={3}
+/>
+```
+
+## Cards
+
+Flexible card components for various content types.
+
+### Standard Card
+
+```tsx
+<div className="p-5 bg-card rounded-3xl border shadow-sm">
+  <h3 className="text-lg font-semibold mb-2">Card Title</h3>
+  <p className="text-muted-foreground">Card content goes here</p>
+</div>
+```
+
+### Interactive Card
+
+With hover state for clickable cards:
+
+```tsx
+<button className="p-5 bg-card rounded-3xl border shadow-sm hover:bg-accent hover:shadow-md transition-all w-full text-left">
+  <h3 className="text-lg font-semibold">Clickable Card</h3>
+  <p className="text-muted-foreground text-sm">Click to view details</p>
+</button>
+```
+
+### Stat Card
+
+Display metrics with icons:
+
+```tsx
+<div className="flex items-center gap-4 p-5 rounded-3xl border bg-card">
+  <div className="h-12 w-12 rounded-2xl bg-orange-500/10 flex items-center justify-center">
+    <DollarSign className="h-6 w-6 text-orange-500" />
+  </div>
+  <div>
+    <p className="text-sm text-muted-foreground">Total Revenue</p>
+    <p className="text-2xl font-bold">$24,500</p>
+  </div>
+</div>
+```
+
+### Grid of Cards
+
+```tsx
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  <Card>Card 1</Card>
+  <Card>Card 2</Card>
+  <Card>Card 3</Card>
+</div>
+```
+
+## Modals / Dialogs
+
+Modal components for confirmations and forms.
+
+```tsx
+<div className="bg-card rounded-2xl p-6 shadow-lg max-w-md w-full">
+  <h2 className="text-xl font-semibold mb-4">Confirm Action</h2>
+  <p className="text-muted-foreground mb-6">
+    Are you sure you want to continue? This action cannot be undone.
+  </p>
+  <div className="flex gap-3 justify-end">
+    <Button variant="outline">Cancel</Button>
+    <Button>Confirm</Button>
+  </div>
+</div>
+```
+
+<Note>
+  Use `max-w-md` for standard modals, `max-w-2xl` for larger content.
+</Note>
+
+## Empty States
+
+Display when there's no content to show:
+
+```tsx
+<div className="flex flex-col items-center justify-center py-16 text-center">
+  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+    <Inbox className="h-8 w-8 text-muted-foreground" />
+  </div>
+  <h3 className="text-lg font-semibold">No transactions yet</h3>
+  <p className="text-muted-foreground mt-1 mb-4">
+    Your transactions will appear here once you make your first payment
+  </p>
+  <Button>Add Transaction</Button>
+</div>
+```
+
+## Error States
+
+Display errors with clear messaging:
+
+```tsx
+<div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-600 dark:text-red-400">
+  <AlertCircle className="h-5 w-5 shrink-0" />
+  <span>Failed to load data. Please try again.</span>
+</div>
+```
+
+## Loading States
+
+### Skeletons
+
+```tsx
+// Icon placeholder
+<Skeleton className="h-12 w-12 rounded-2xl" />
+
+// Text placeholder
+<Skeleton className="h-5 w-32" />
+
+// Card placeholder
+<Skeleton className="h-20 w-full rounded-3xl" />
+
+// Full card skeleton
+<div className="p-5 bg-card rounded-3xl border space-y-3">
+  <Skeleton className="h-5 w-32" />
+  <Skeleton className="h-4 w-full" />
+  <Skeleton className="h-4 w-2/3" />
+</div>
+```
+
+### Spinners
+
+```tsx
+// Inline spinner
+<Loader2 className="h-4 w-4 animate-spin" />
+
+// Full page loading
+<div className="min-h-screen flex items-center justify-center">
+  <div className="flex flex-col items-center gap-4">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <p className="text-muted-foreground">Loading...</p>
+  </div>
+</div>
+```
+
+## Layout Patterns
+
+### Auth Pages
+
+Centered card on full-height page:
+
+```tsx
+<div className="min-h-screen flex items-center justify-center px-4">
+  <div className="bg-card rounded-2xl shadow-lg p-8 sm:p-10 max-w-md w-full">
+    <h2 className="text-3xl font-bold mb-2">Sign In</h2>
+    <p className="text-muted-foreground text-lg mb-8">Welcome back!</p>
+    {/* Form content */}
+  </div>
+</div>
+```
+
+### Dashboard Pages
+
+```tsx
+<div className="space-y-8 max-w-7xl mx-auto">
+  {/* Header */}
+  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+      <p className="text-muted-foreground text-lg">Overview of your account</p>
+    </div>
+    <Button>New Item</Button>
+  </div>
+
+  {/* Content */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {/* Cards */}
+  </div>
+</div>
+```
+
+### Sidebar Layout
+
+```tsx
+<SidebarProvider>
+  <AppSidebar />
+  <SidebarInset className="flex flex-col h-screen overflow-hidden">
+    <header className="flex h-16 items-center gap-2 border-b px-4">
+      <SidebarTrigger />
+      <Separator orientation="vertical" className="h-4" />
+    </header>
+    <main className="flex-1 overflow-y-auto p-6">
+      {children}
+    </main>
+  </SidebarInset>
+</SidebarProvider>
+```
+
+## Dividers
+
+### Horizontal Divider
+
+```tsx
+<div className="border-t border-border" />
+```
+
+### Divider with Text
+
+```tsx
+<div className="relative">
+  <div className="absolute inset-0 flex items-center">
+    <div className="w-full border-t border-border" />
+  </div>
+  <div className="relative flex justify-center">
+    <span className="bg-background px-4 text-muted-foreground text-sm">
+      or
+    </span>
+  </div>
+</div>
+```
+
+## Shadows
+
+Use shadows sparingly for depth:
+
+```tsx
+// Subtle elevation for cards
+<div className="shadow-sm">
+  Card with subtle shadow
+</div>
+
+// Modals and popovers
+<div className="shadow-lg">
+  Modal with prominent shadow
+</div>
+
+// Colored glow for primary buttons
+<Button className="shadow-lg shadow-primary/20">
+  Glowing button
+</Button>
+```
+
+## Icon Sizing
+
+Consistent icon sizes across components:
+
+```tsx
+// Inline with text, buttons
+<Icon className="h-4 w-4" />
+
+// Input icons, list items
+<Icon className="h-5 w-5" />
+
+// Card icons, stat cards
+<Icon className="h-6 w-6" />
+
+// Empty states, large features
+<Icon className="h-8 w-8" />
+```
+
+## Transitions
+
+```tsx
+// General transitions
+<div className="transition-all hover:scale-105">
+  Hover to scale
+</div>
+
+// Color transitions
+<button className="transition-colors hover:bg-accent">
+  Hover for color change
+</button>
+
+// With duration
+<div className="transition-all duration-200 hover:shadow-md">
+  Fast transition
+</div>
+```
+
+## Quick Reference Table
+
+| Element | Border Radius | Height | Padding |
+|---------|--------------|--------|----------|
+| Small button | `rounded-md` | `h-8` | `px-3` |
+| Default button | `rounded-xl` | `h-9`-`h-11` | `px-4`-`px-6` |
+| Large button | `rounded-2xl` | `h-12` | `px-6` |
+| Input | `rounded-xl` | `h-9`-`h-12` | `px-3` |
+| Card | `rounded-3xl` | - | `p-5`-`p-6` |
+| Modal | `rounded-2xl` | - | `p-6`-`p-8` |
+| Icon container | `rounded-2xl` | `h-12 w-12` | - |
+| Avatar | `rounded-full` | varies | - |
+
+<Tip>
+  Use large border-radius values (20px+) to maintain the friendly, modern aesthetic of the design system.
+</Tip>

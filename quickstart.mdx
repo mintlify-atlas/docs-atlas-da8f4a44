@@ -1,80 +1,399 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Get the Money monorepo up and running in minutes"
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
-
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+Before you begin, ensure you have the following installed on your system:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Node.js 18+" icon="node-js">
+    Download from [nodejs.org](https://nodejs.org/)
+  </Card>
+  <Card title="pnpm 9.0.0" icon="box">
+    Install with `npm install -g pnpm@9.0.0`
+  </Card>
+  <Card title="MongoDB" icon="database">
+    Local instance or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+  </Card>
+  <Card title="Git" icon="git-alt">
+    For version control and cloning the repository
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Installation
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the Money monorepo from GitHub:
+    
+    ```bash
+    git clone https://github.com/AmarMuric04/money.git
+    cd money
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    Install all dependencies for the entire monorepo using pnpm:
+    
+    <CodeGroup>
+    ```bash pnpm
+    pnpm install
+    ```
+    
+    ```bash npm
+    npm install
+    ```
+    
+    ```bash yarn
+    yarn install
+    ```
+    </CodeGroup>
+    
+    <Note>
+    The monorepo uses pnpm workspaces. Make sure you're using pnpm 9.0.0 as specified in package.json.
+    </Note>
+  </Step>
+
+  <Step title="Set up environment variables">
+    Create `.env.local` files for each application that requires environment configuration.
+    
+    ### CashGap (.env.local in apps/cashgap/)
+    
+    ```bash
+    # Database
+    MONGODB_URI=mongodb://localhost:27017/cashgap
+    
+    # Authentication
+    AUTH_SECRET=your-secret-key-here-min-32-chars
+    NEXTAUTH_URL=http://localhost:3000
+    
+    # Google OAuth (optional)
+    GOOGLE_CLIENT_ID=your-google-client-id
+    GOOGLE_CLIENT_SECRET=your-google-client-secret
+    
+    # Email (for verification)
+    SMTP_HOST=smtp.gmail.com
+    SMTP_PORT=587
+    SMTP_USER=your-email@gmail.com
+    SMTP_PASSWORD=your-app-password
+    SMTP_FROM=noreply@cashgap.com
+    ```
+    
+    ### SecureVault (.env.local in apps/secure/src/)
+    
+    ```bash
+    # Database
+    MONGODB_URI=mongodb://localhost:27017/securevault
+    
+    # Authentication
+    AUTH_SECRET=your-secret-key-here-min-32-chars
+    NEXTAUTH_URL=http://localhost:3000
+    
+    # JWT Tokens
+    JWT_SECRET=your-jwt-secret-min-32-chars
+    JWT_REFRESH_SECRET=your-refresh-secret-min-32-chars
+    ```
+    
+    <Warning>
+    Never commit `.env.local` files to version control. These files contain sensitive credentials.
+    </Warning>
+  </Step>
+
+  <Step title="Start MongoDB">
+    Make sure MongoDB is running on your local machine:
+    
+    ```bash
+    # macOS (using Homebrew)
+    brew services start mongodb-community
+    
+    # Linux (systemd)
+    sudo systemctl start mongod
+    
+    # Or use MongoDB Atlas (cloud)
+    # Update MONGODB_URI with your Atlas connection string
+    ```
+  </Step>
+
+  <Step title="Run development servers">
+    Start all applications in development mode:
+    
+    ```bash
+    pnpm dev
+    ```
+    
+    Or run individual applications:
+    
+    <Tabs>
+      <Tab title="CashGap">
+        ```bash
+        pnpm dev --filter=cashgap
+        ```
+        
+        Access at [http://localhost:3000](http://localhost:3000)
+      </Tab>
+      
+      <Tab title="SecureVault">
+        ```bash
+        pnpm dev --filter=secure
+        ```
+        
+        Access at [http://localhost:3000](http://localhost:3000)
+      </Tab>
+      
+      <Tab title="Web">
+        ```bash
+        pnpm dev --filter=web
+        ```
+        
+        Access at [http://localhost:3000](http://localhost:3000)
+      </Tab>
+    </Tabs>
+    
+    <Note>
+    When running individual apps, they will all use port 3000 by default. Only run one at a time or modify the port in package.json.
+    </Note>
+  </Step>
+</Steps>
+
+## Verify Installation
+
+After starting the development servers, verify everything is working:
+
+<AccordionGroup>
+  <Accordion title="Check CashGap" icon="wallet">
+    1. Navigate to [http://localhost:3000](http://localhost:3000)
+    2. You should see the CashGap landing page
+    3. Click "Get Started" to create an account
+    4. Fill in the registration form and verify your email
+    5. Log in and explore the dashboard
+  </Accordion>
+  
+  <Accordion title="Check SecureVault" icon="lock">
+    1. Navigate to [http://localhost:3000](http://localhost:3000) (if running SecureVault)
+    2. You should see the SecureVault landing page
+    3. Register for a new account
+    4. Log in and access the password vault
+    5. Try adding a new password entry
+  </Accordion>
+  
+  <Accordion title="Verify Database Connection" icon="database">
+    Check that MongoDB is connected:
+    
+    ```bash
+    # Connect to MongoDB
+    mongosh
+    
+    # List databases
+    show dbs
+    
+    # You should see cashgap and/or securevault databases
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Available Scripts
+
+The monorepo includes several useful scripts:
+
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start all apps in development mode |
+| `pnpm build` | Build all apps for production |
+| `pnpm lint` | Run ESLint on all packages |
+| `pnpm format` | Format code with Prettier |
+| `pnpm check-types` | Run TypeScript type checking |
+
+### Using Turbo Filters
+
+Run commands for specific apps or packages:
+
+```bash
+# Run dev for a specific app
+pnpm dev --filter=cashgap
+pnpm dev --filter=secure
+pnpm dev --filter=web
+
+# Build a specific app
+pnpm build --filter=cashgap
+
+# Lint a specific package
+pnpm lint --filter=@repo/ui
+```
+
+## Building for Production
+
+<Steps>
+  <Step title="Build all applications">
+    ```bash
+    pnpm build
+    ```
+    
+    This will build all applications in the correct order, respecting dependencies.
+  </Step>
+  
+  <Step title="Set production environment variables">
+    Update your `.env.local` files with production values:
+    
+    - Use production MongoDB URI
+    - Set strong AUTH_SECRET values
+    - Configure production OAuth credentials
+    - Set up production SMTP settings
+  </Step>
+  
+  <Step title="Start production servers">
+    ```bash
+    # Start CashGap in production
+    cd apps/cashgap
+    pnpm start
+    
+    # Start SecureVault in production
+    cd apps/secure
+    pnpm start
+    ```
+  </Step>
+</Steps>
+
+## Working with Shared Packages
+
+The monorepo includes shared packages that can be used across applications:
+
+### Using @repo/ui Components
+
+```tsx
+import { Button, Card, Input } from "@repo/ui";
+
+export default function MyComponent() {
+  return (
+    <Card>
+      <Input placeholder="Enter text..." />
+      <Button>Submit</Button>
+    </Card>
+  );
+}
+```
+
+### Using @repo/auth
+
+```tsx
+import { LoginForm, RegisterForm, useAuth } from "@repo/auth";
+
+export default function AuthPage() {
+  const { user, login, logout } = useAuth();
+  
+  return (
+    <div>
+      {user ? (
+        <button onClick={logout}>Logout</button>
+      ) : (
+        <LoginForm onSuccess={(user) => console.log("Logged in:", user)} />
+      )}
+    </div>
+  );
+}
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Port Already in Use" icon="triangle-exclamation">
+    If you see `Error: Port 3000 is already in use`:
+    
+    1. Kill the process using the port:
+       ```bash
+       # macOS/Linux
+       lsof -ti:3000 | xargs kill -9
+       
+       # Windows
+       netstat -ano | findstr :3000
+       taskkill /PID <PID> /F
+       ```
+    
+    2. Or change the port in package.json:
+       ```json
+       {
+         "scripts": {
+           "dev": "next dev --port 3001"
+         }
+       }
+       ```
+  </Accordion>
+  
+  <Accordion title="Database Connection Failed" icon="database">
+    If MongoDB connection fails:
+    
+    1. Verify MongoDB is running:
+       ```bash
+       # macOS
+       brew services list
+       
+       # Linux
+       sudo systemctl status mongod
+       ```
+    
+    2. Check your MONGODB_URI in `.env.local`
+    3. Ensure the database name doesn't contain special characters
+    4. For Atlas, verify your IP is whitelisted
+  </Accordion>
+  
+  <Accordion title="Build Failures" icon="circle-xmark">
+    If builds fail:
+    
+    1. Clear Turbo cache:
+       ```bash
+       rm -rf .turbo
+       ```
+    
+    2. Clear node_modules and reinstall:
+       ```bash
+       rm -rf node_modules
+       pnpm install
+       ```
+    
+    3. Clear Next.js cache:
+       ```bash
+       rm -rf apps/*/. next
+       ```
+    
+    4. Rebuild:
+       ```bash
+       pnpm build
+       ```
+  </Accordion>
+  
+  <Accordion title="Type Errors" icon="code">
+    If you encounter TypeScript errors:
+    
+    1. Run type checking:
+       ```bash
+       pnpm check-types
+       ```
+    
+    2. Ensure all dependencies are installed:
+       ```bash
+       pnpm install
+       ```
+    
+    3. Check that you're using TypeScript 5.9.2 (specified in package.json)
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Now that you have the Money monorepo running, explore the documentation:
+
+<CardGroup cols={2}>
+  <Card title="Monorepo Structure" icon="folder-tree" href="/monorepo-structure">
+    Understand the organization and architecture of the project
+  </Card>
+  <Card title="CashGap Guide" icon="wallet" href="/applications/cashgap/overview">
+    Learn about the personal finance management app
+  </Card>
+  <Card title="SecureVault Guide" icon="lock" href="/applications/securevault/overview">
+    Explore the password manager features
+  </Card>
+  <Card title="Development Setup" icon="code" href="/development/setup">
+    Set up your development environment in detail
+  </Card>
+</CardGroup>

@@ -1,0 +1,468 @@
+---
+title: Card Components
+description: A collection of card components for displaying content, metrics, charts, and actions in various layouts
+---
+
+## Card (Base Component)
+
+The foundational card component that serves as a container for other content.
+
+### Basic Usage
+
+```tsx
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardContent,
+  CardFooter 
+} from "@repo/ui";
+
+function Example() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Card Title</CardTitle>
+        <CardDescription>Card description goes here</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p>Card content</p>
+      </CardContent>
+      <CardFooter>
+        <button>Action</button>
+      </CardFooter>
+    </Card>
+  );
+}
+```
+
+## Base Card Components
+
+<ParamField path="Card" type="component">
+  The main card container with rounded corners, border, and shadow.
+</ParamField>
+
+<ParamField path="CardHeader" type="component">
+  Header section with padding and vertical spacing.
+</ParamField>
+
+<ParamField path="CardTitle" type="component">
+  Heading element (h3) for the card title.
+</ParamField>
+
+<ParamField path="CardDescription" type="component">
+  Paragraph element for card description with muted text color.
+</ParamField>
+
+<ParamField path="CardContent" type="component">
+  Main content area with padding.
+</ParamField>
+
+<ParamField path="CardFooter" type="component">
+  Footer section with flex layout for actions.
+</ParamField>
+
+## LongCard
+
+A horizontal card designed for list views with hover effects.
+
+### Props
+
+<ParamField path="variant" type="string" default="default">
+  Visual variant of the card.
+  
+  Options: `default`, `hover`, `selected`
+</ParamField>
+
+<ParamField path="hoverable" type="boolean" default="true">
+  Enable hover effect that changes background color.
+</ParamField>
+
+### Usage
+
+```tsx
+import { LongCard } from "@repo/ui";
+
+function UserList() {
+  return (
+    <div className="space-y-2">
+      <LongCard hoverable>
+        <div className="flex-1">
+          <h3 className="font-semibold">John Doe</h3>
+          <p className="text-sm text-muted-foreground">john@example.com</p>
+        </div>
+        <button>View</button>
+      </LongCard>
+      
+      <LongCard variant="selected">
+        <div className="flex-1">
+          <h3 className="font-semibold">Jane Smith</h3>
+          <p className="text-sm text-muted-foreground">jane@example.com</p>
+        </div>
+        <button>View</button>
+      </LongCard>
+    </div>
+  );
+}
+```
+
+## MetricCard
+
+Display key metrics and statistics with optional icons and actions.
+
+### Props
+
+<ParamField path="icon" type="ReactNode">
+  Icon element to display at the top of the card.
+</ParamField>
+
+<ParamField path="title" type="string" required>
+  The metric title/label.
+</ParamField>
+
+<ParamField path="value" type="string | number" required>
+  The metric value to display prominently.
+</ParamField>
+
+<ParamField path="description" type="string">
+  Additional description or context below the value.
+</ParamField>
+
+<ParamField path="action" type="ReactNode">
+  Action element (usually a button or link) displayed at the bottom.
+</ParamField>
+
+### Usage
+
+```tsx
+import { MetricCard } from "@repo/ui";
+import { Users } from "lucide-react";
+
+function Dashboard() {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <MetricCard
+        icon={<Users className="size-6" />}
+        title="Total Users"
+        value="2,543"
+        description="+12% from last month"
+      />
+      
+      <MetricCard
+        title="Revenue"
+        value="$45,231"
+        description="+8% from last month"
+        action={<a href="/revenue" className="text-sm text-primary">View details</a>}
+      />
+    </div>
+  );
+}
+```
+
+## ChartCard
+
+A card specifically designed to contain charts and visualizations.
+
+### Props
+
+<ParamField path="title" type="string" required>
+  The chart title.
+</ParamField>
+
+<ParamField path="description" type="string">
+  Optional description of the chart.
+</ParamField>
+
+### Usage
+
+```tsx
+import { ChartCard } from "@repo/ui";
+
+function Analytics() {
+  return (
+    <ChartCard 
+      title="Revenue Over Time"
+      description="Last 12 months"
+    >
+      {/* Your chart component */}
+      <YourChartComponent />
+    </ChartCard>
+  );
+}
+```
+
+## StatCard
+
+Compact card for displaying a single statistic with an icon.
+
+### Props
+
+<ParamField path="label" type="string" required>
+  The stat label.
+</ParamField>
+
+<ParamField path="value" type="string | number" required>
+  The stat value.
+</ParamField>
+
+<ParamField path="icon" type="ReactNode">
+  Icon element to display.
+</ParamField>
+
+<ParamField path="iconColor" type="string" default="text-primary">
+  Tailwind color class for the icon.
+</ParamField>
+
+<ParamField path="iconBg" type="string" default="bg-primary/10">
+  Tailwind background class for the icon container.
+</ParamField>
+
+<ParamField path="suffix" type="string">
+  Text to append after the value (e.g., "%", "k").
+</ParamField>
+
+### Usage
+
+```tsx
+import { StatCard } from "@repo/ui";
+import { DollarSign, TrendingUp, Users } from "lucide-react";
+
+function Stats() {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <StatCard
+        label="Total Revenue"
+        value="$12,450"
+        icon={<DollarSign className="size-5" />}
+        iconColor="text-green-600"
+        iconBg="bg-green-100"
+      />
+      
+      <StatCard
+        label="Growth Rate"
+        value="23"
+        suffix="%"
+        icon={<TrendingUp className="size-5" />}
+        iconColor="text-blue-600"
+        iconBg="bg-blue-100"
+      />
+      
+      <StatCard
+        label="Active Users"
+        value="1.2"
+        suffix="k"
+        icon={<Users className="size-5" />}
+      />
+    </div>
+  );
+}
+```
+
+## QuickActionCard
+
+Interactive card for triggering actions, rendered as a button.
+
+### Props
+
+<ParamField path="title" type="string" required>
+  The action title.
+</ParamField>
+
+<ParamField path="description" type="string">
+  Optional description of the action.
+</ParamField>
+
+<ParamField path="icon" type="ReactNode">
+  Icon element to display.
+</ParamField>
+
+<ParamField path="iconColor" type="string" default="text-primary">
+  Tailwind color class for the icon.
+</ParamField>
+
+<ParamField path="iconBg" type="string" default="bg-primary/10">
+  Tailwind background class for the icon container.
+</ParamField>
+
+<ParamField path="onClick" type="function">
+  Click handler function.
+</ParamField>
+
+### Usage
+
+```tsx
+import { QuickActionCard } from "@repo/ui";
+import { Plus, Upload, Download } from "lucide-react";
+
+function QuickActions() {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <QuickActionCard
+        title="Create New"
+        description="Start a new project"
+        icon={<Plus className="size-6" />}
+        onClick={() => console.log('Create clicked')}
+      />
+      
+      <QuickActionCard
+        title="Upload Files"
+        description="Import your data"
+        icon={<Upload className="size-6" />}
+        iconColor="text-blue-600"
+        iconBg="bg-blue-100"
+        onClick={() => console.log('Upload clicked')}
+      />
+      
+      <QuickActionCard
+        title="Export Data"
+        icon={<Download className="size-6" />}
+        iconColor="text-green-600"
+        iconBg="bg-green-100"
+        onClick={() => console.log('Export clicked')}
+      />
+    </div>
+  );
+}
+```
+
+The QuickActionCard has:
+- Hover effects (shadow increase, icon scale)
+- Proper button semantics
+- Keyboard accessibility
+- Transition animations
+
+## Complete Dashboard Example
+
+```tsx
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  MetricCard,
+  StatCard,
+  ChartCard,
+  QuickActionCard,
+} from "@repo/ui";
+import { Users, DollarSign, TrendingUp, Plus } from "lucide-react";
+
+function Dashboard() {
+  return (
+    <div className="space-y-6">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard
+          label="Total Users"
+          value="2,543"
+          icon={<Users className="size-5" />}
+        />
+        <StatCard
+          label="Revenue"
+          value="$45,231"
+          icon={<DollarSign className="size-5" />}
+          iconColor="text-green-600"
+          iconBg="bg-green-100"
+        />
+        <StatCard
+          label="Growth"
+          value="23"
+          suffix="%"
+          icon={<TrendingUp className="size-5" />}
+          iconColor="text-blue-600"
+          iconBg="bg-blue-100"
+        />
+      </div>
+      
+      {/* Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <MetricCard
+          icon={<Users className="size-6" />}
+          title="Active Users"
+          value="1,234"
+          description="Online right now"
+        />
+        <MetricCard
+          title="Conversion Rate"
+          value="3.24%"
+          description="+0.5% from yesterday"
+        />
+      </div>
+      
+      {/* Chart */}
+      <ChartCard
+        title="Revenue Trends"
+        description="Last 30 days"
+      >
+        {/* Your chart here */}
+      </ChartCard>
+      
+      {/* Quick Actions */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <QuickActionCard
+            title="New User"
+            description="Add a team member"
+            icon={<Plus className="size-6" />}
+            onClick={() => {}}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+## TypeScript Types
+
+```tsx
+// LongCard
+interface LongCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: "default" | "hover" | "selected";
+  hoverable?: boolean;
+}
+
+// MetricCard
+interface MetricCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  icon?: React.ReactNode;
+  title: string;
+  value: string | number;
+  description?: string;
+  action?: React.ReactNode;
+}
+
+// ChartCard
+interface ChartCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  title: string;
+  description?: string;
+}
+
+// StatCard
+interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  label: string;
+  value: string | number;
+  icon?: React.ReactNode;
+  iconColor?: string;
+  iconBg?: string;
+  suffix?: string;
+}
+
+// QuickActionCard
+interface QuickActionCardProps extends React.HTMLAttributes<HTMLButtonElement> {
+  title: string;
+  description?: string;
+  icon?: React.ReactNode;
+  iconColor?: string;
+  iconBg?: string;
+}
+```
+
+## Styling Details
+
+All cards share:
+- **Rounded corners** - `rounded-3xl` (24px border radius)
+- **Border** - Subtle border using theme colors
+- **Shadow** - `shadow-sm` for depth
+- **Background** - Card background color from theme
+- **Padding** - Generous padding (p-6) for content breathing room

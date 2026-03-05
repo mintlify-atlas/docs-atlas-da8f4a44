@@ -1,0 +1,362 @@
+---
+title: Building for Production
+description: Build and optimize the Money monorepo for production deployment
+---
+
+## Build Process
+
+The Money monorepo uses Turborepo to orchestrate builds across all apps and packages. This ensures that builds are fast, cached, and respect dependencies.
+
+## Building All Apps
+
+To build all applications and packages:
+
+<CodeGroup>
+  ```bash pnpm
+  pnpm build
+  ```
+
+  ```bash npm
+  npm run build
+  ```
+
+  ```bash yarn
+  yarn build
+  ```
+</CodeGroup>
+
+This runs the `turbo run build` command, which:
+
+1. Analyzes the dependency graph
+2. Builds packages before apps that depend on them
+3. Runs builds in parallel when possible
+4. Caches outputs for faster subsequent builds
+
+## Building Individual Apps
+
+You can build a specific app using Turborepo's `--filter` flag:
+
+### Build a Single App
+
+```bash
+# Build just the web app
+pnpm build --filter=web
+
+# Build just the secure app
+pnpm build --filter=secure
+
+# Build just the cashgap app
+pnpm build --filter=cashgap
+
+# Build just the docs app
+pnpm build --filter=docs
+```
+
+### Build with Dependencies
+
+To build an app and all its dependencies:
+
+```bash
+pnpm build --filter=secure...
+```
+
+The `...` suffix tells Turborepo to include all dependencies in the build.
+
+## Build Configuration
+
+The build process is configured in `turbo.json`:
+
+```json
+{
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    }
+  }
+}
+```
+
+### Key Configuration Options
+
+- **`dependsOn: ["^build"]`**: Ensures packages are built before dependent apps
+- **`inputs`**: Files that affect the build output (source files, env files)
+- **`outputs`**: Build artifacts that get cached (`.next` directories)
+- **`env`**: Environment variables used during build (see below)
+
+## Environment Variables
+
+The build process requires certain environment variables to be set. These are defined in `turbo.json`:
+
+<Warning>
+  All environment variables listed in `turbo.json` must be available during the build, even if they're empty. Missing variables may cause the build to fail or produce incorrect results.
+</Warning>
+
+### Required Build Variables
+
+```bash
+# Database
+MONGODB_URI=your-mongodb-connection-string
+
+# Authentication & Security
+JWT_SECRET=your-jwt-secret
+JWT_REFRESH_SECRET=your-refresh-secret
+AUTH_SECRET=your-nextauth-secret
+
+# OAuth (if using Google Sign-In)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# App Configuration
+NEXT_PUBLIC_APP_URL=https://your-app-url.com
+ALLOWED_ORIGIN=https://your-app-url.com
+
+# Email (SMTP)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@example.com
+SMTP_PASSWORD=your-smtp-password
+SMTP_FROM=noreply@example.com
+
+# Environment
+NODE_ENV=production
+```
+
+See [Environment Variables](/development/deployment/environment-variables) for detailed descriptions.
+
+## Build Outputs
+
+Each Next.js app produces build artifacts in its `.next` directory:
+
+```
+apps/
+  web/.next/          # Web app build output
+  secure/.next/       # Secure app build output
+  cashgap/.next/      # CashGap app build output
+  docs/.next/         # Docs app build output
+```
+
+### What's Included
+
+- **Optimized JavaScript bundles**: Minified and tree-shaken
+- **Static assets**: Images, fonts, and other static files
+- **Server components**: React Server Components (RSC) payloads
+- **Build manifest**: Metadata about the build
+
+<Warning>
+  The `.next/cache` directory is excluded from Turborepo's cache to avoid conflicts and reduce cache size.
+</Warning>
+
+## Build Optimization
+
+### Turborepo Caching
+
+Turborepo caches build outputs to speed up subsequent builds:
+
+1. **Local cache**: Stored in `node_modules/.cache/turbo`
+2. **Remote cache**: Optional, can be configured with Vercel or custom remote cache
+
+To clear the cache:
+
+```bash
+pnpm turbo clean
+```
+
+### Incremental Builds
+
+Turborepo only rebuilds what changed:
+
+- If you modify a package, only apps depending on it are rebuilt
+- If you modify an app, only that app is rebuilt
+- Unchanged packages and apps use cached outputs
+
+### Parallel Execution
+
+Turborepo runs builds in parallel when there are no dependencies:
+
+```bash
+# These can build in parallel:
+# - web (no dependencies)
+# - docs (no dependencies)
+# While secure and cashgap wait for @repo/auth and @repo/ui
+```
+
+## Production Build Steps
+
+<Steps>
+  <Step title="Ensure environment variables are set">
+    Verify all required environment variables are configured:
+
+    ```bash
+    # Check your .env file or CI/CD environment
+    cat .env
+    ```
+  </Step>
+
+  <Step title="Run type checking">
+    Catch TypeScript errors before building:
+
+    ```bash
+    pnpm check-types
+    ```
+  </Step>
+
+  <Step title="Run linting">
+    Ensure code quality:
+
+    ```bash
+    pnpm lint
+    ```
+  </Step>
+
+  <Step title="Build all apps">
+    Run the production build:
+
+    ```bash
+    pnpm build
+    ```
+
+    This may take a few minutes on the first run. Subsequent builds will be faster due to caching.
+  </Step>
+
+  <Step title="Verify build outputs">
+    Check that `.next` directories were created:
+
+    ```bash
+    ls -la apps/*/. next
+    ```
+  </Step>
+</Steps>
+
+## Starting Production Servers
+
+After building, you can start production servers:
+
+```bash
+# Start a specific app
+cd apps/secure
+pnpm start
+
+# Or use turbo to start all apps
+pnpm --filter secure start
+```
+
+The production server:
+- Serves optimized, minified assets
+- Uses production React builds
+- Enables optimizations like compression
+
+## CI/CD Integration
+
+Example GitHub Actions workflow:
+
+```yaml
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9.0.0
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Type check
+        run: pnpm check-types
+      
+      - name: Lint
+        run: pnpm lint
+      
+      - name: Build
+        run: pnpm build
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          # ... other secrets
+```
+
+## Troubleshooting
+
+### Build Failures
+
+**TypeScript errors**
+
+```bash
+# Run type checking to see all errors
+pnpm check-types
+```
+
+**Missing environment variables**
+
+Ensure all variables in `turbo.json` are set:
+
+```bash
+# Check if variables are available
+echo $MONGODB_URI
+echo $JWT_SECRET
+```
+
+**Out of memory errors**
+
+Increase Node's memory limit:
+
+```bash
+NODE_OPTIONS="--max-old-space-size=4096" pnpm build
+```
+
+### Cache Issues
+
+If you suspect cache corruption:
+
+```bash
+# Clear Turbo cache
+pnpm turbo clean
+
+# Clear Next.js cache
+rm -rf apps/*/.next
+
+# Rebuild
+pnpm build
+```
+
+### Dependency Issues
+
+If builds fail due to dependency problems:
+
+```bash
+# Clean install
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
+pnpm build
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deployment Overview" icon="rocket" href="/development/deployment/overview">
+    Learn how to deploy to production
+  </Card>
+  <Card title="Environment Variables" icon="key" href="/development/deployment/environment-variables">
+    Complete environment variable reference
+  </Card>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Test your builds
+  </Card>
+  <Card title="Database Setup" icon="database" href="/development/deployment/database-setup">
+    Configure production database
+  </Card>
+</CardGroup>

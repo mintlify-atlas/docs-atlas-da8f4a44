@@ -1,0 +1,249 @@
+---
+title: Colors
+description: OKLCH-based color system for perceptually uniform, accessible colors
+---
+
+The SecureVault Design System uses **OKLCH** (Oklch Lightness Chroma Hue) colors for perceptually uniform color spaces. This ensures consistent visual weight across all colors and better accessibility.
+
+## Dark Theme (Primary)
+
+The design system is dark-first, meaning all components are designed for dark mode by default.
+
+### Core Colors
+
+<CardGroup cols={2}>
+  <Card title="Background" icon="square">
+    `oklch(0.145 0 0)` - Near black base background
+  </Card>
+  <Card title="Foreground" icon="font">
+    `oklch(0.985 0 0)` - Near white primary text
+  </Card>
+  <Card title="Card" icon="layer-group">
+    `oklch(0.205 0 0)` - Slightly lighter than background
+  </Card>
+  <Card title="Muted" icon="circle-half-stroke">
+    `oklch(0.269 0 0)` - Subtle backgrounds and disabled states
+  </Card>
+</CardGroup>
+
+### Semantic Colors
+
+<CardGroup cols={2}>
+  <Card title="Primary" icon="palette">
+    `oklch(0.65 0.25 262)` - Purple/Blue accent for actions
+  </Card>
+  <Card title="Destructive" icon="triangle-exclamation">
+    `oklch(0.704 0.191 22)` - Red for errors and dangerous actions
+  </Card>
+  <Card title="Border" icon="border-all">
+    `oklch(1 0 0 / 10%)` - Subtle borders with 10% opacity
+  </Card>
+  <Card title="Input" icon="text-slash">
+    `oklch(1 0 0 / 15%)` - Input backgrounds with 15% opacity
+  </Card>
+</CardGroup>
+
+## CSS Variables
+
+All colors are defined as CSS custom properties:
+
+```css
+:root {
+  /* Background colors */
+  --background: oklch(0.145 0 0);       /* Near black */
+  --foreground: oklch(0.985 0 0);       /* Near white */
+  --card: oklch(0.205 0 0);             /* Card backgrounds */
+  --muted: oklch(0.269 0 0);            /* Subtle backgrounds */
+  --muted-foreground: oklch(0.708 0 0); /* Secondary text */
+  
+  /* Interactive colors */
+  --primary: oklch(0.65 0.25 262);      /* Purple/Blue accent */
+  --destructive: oklch(0.704 0.191 22); /* Red for errors */
+  
+  /* UI elements */
+  --border: oklch(1 0 0 / 10%);         /* Subtle borders */
+  --input: oklch(1 0 0 / 15%);          /* Input backgrounds */
+}
+```
+
+## Usage in Components
+
+### Background Colors
+
+```tsx
+// Main background
+<div className="bg-background">
+  Content
+</div>
+
+// Card background (elevated)
+<div className="bg-card">
+  Card content
+</div>
+
+// Muted background (subtle)
+<div className="bg-muted">
+  Less prominent content
+</div>
+```
+
+### Text Colors
+
+```tsx
+// Primary text
+<h1 className="text-foreground">Title</h1>
+
+// Secondary/muted text
+<p className="text-muted-foreground">Description</p>
+
+// Primary accent (links, buttons)
+<a className="text-primary">Learn more</a>
+
+// Destructive (errors, warnings)
+<span className="text-destructive">Error message</span>
+```
+
+### Border Colors
+
+```tsx
+// Standard border
+<div className="border border-border">
+  Content with border
+</div>
+
+// Input border
+<input className="border border-input" />
+```
+
+## Color Utilities
+
+### Opacity Modifiers
+
+Tailwind's opacity utilities work seamlessly with OKLCH colors:
+
+```tsx
+// 50% opacity background
+<div className="bg-primary/50">
+  Semi-transparent
+</div>
+
+// 20% opacity for shadows
+<Button className="shadow-lg shadow-primary/20">
+  Glowing button
+</Button>
+```
+
+### Hover States
+
+```tsx
+// Hover background transition
+<button className="bg-card hover:bg-accent transition-colors">
+  Interactive card
+</button>
+
+// Hover text color
+<a className="text-muted-foreground hover:text-foreground">
+  Link
+</a>
+```
+
+## Understanding OKLCH
+
+### Why OKLCH?
+
+OKLCH provides several advantages over traditional RGB or HSL:
+
+- **Perceptually uniform** - Equal changes in values produce equal visual changes
+- **Better accessibility** - More predictable contrast ratios
+- **Wider color gamut** - Access to more vivid colors
+- **Consistent lightness** - L value directly corresponds to perceived brightness
+
+### OKLCH Components
+
+```
+oklch(L C H)
+```
+
+- **L (Lightness)**: 0-1, where 0 is black and 1 is white
+- **C (Chroma)**: 0-0.4, where 0 is grayscale and higher is more saturated
+- **H (Hue)**: 0-360, the color angle (0=red, 120=green, 240=blue)
+
+<Note>
+  When chroma is 0, the hue value doesn't matter - the color will be grayscale.
+</Note>
+
+## Practical Examples
+
+### Error State
+
+```tsx
+<div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-600 dark:text-red-400">
+  <AlertCircle className="h-5 w-5 shrink-0" />
+  <span>Error message here</span>
+</div>
+```
+
+### Stat Card with Colored Accent
+
+```tsx
+<div className="flex items-center gap-4 p-5 rounded-3xl border bg-card">
+  <div className="h-12 w-12 rounded-2xl bg-orange-500/10 flex items-center justify-center">
+    <Icon className="h-6 w-6 text-orange-500" />
+  </div>
+  <div>
+    <p className="text-sm text-muted-foreground">Total Revenue</p>
+    <p className="text-2xl font-bold text-foreground">$24,500</p>
+  </div>
+</div>
+```
+
+### Interactive Card
+
+```tsx
+<button className="p-5 bg-card rounded-3xl border shadow-sm hover:bg-accent hover:shadow-md transition-all">
+  <h3 className="text-foreground font-semibold">Card Title</h3>
+  <p className="text-muted-foreground text-sm">Card description</p>
+</button>
+```
+
+## Accessibility
+
+The color system is designed with WCAG 2.1 accessibility guidelines in mind:
+
+- **Foreground on Background**: High contrast (AAA rated)
+- **Muted Foreground on Background**: Meets AA for large text
+- **Primary**: Sufficient contrast on both background and card
+- **Destructive**: High contrast for error visibility
+
+<Tip>
+  Always test color combinations with a contrast checker when creating custom components.
+</Tip>
+
+## Custom Colors
+
+If you need to add custom colors, follow the OKLCH pattern:
+
+```css
+:root {
+  /* Success color (green) */
+  --success: oklch(0.7 0.2 145);
+  
+  /* Warning color (yellow) */
+  --warning: oklch(0.8 0.15 85);
+  
+  /* Info color (blue) */
+  --info: oklch(0.65 0.22 240);
+}
+```
+
+Then use in Tailwind:
+
+```tsx
+<div className="bg-[oklch(var(--success)/0.1)] text-[oklch(var(--success))]">
+  Success message
+</div>
+```
+
+<Note>
+  Keep chroma values between 0.15-0.25 for most UI colors to maintain visual harmony with the existing palette.
+</Note>

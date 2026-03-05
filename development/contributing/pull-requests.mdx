@@ -1,0 +1,511 @@
+---
+title: Pull Request Guidelines
+description: How to create effective pull requests for the Money monorepo
+---
+
+## Overview
+
+Pull requests (PRs) are the primary way to contribute code to the Money monorepo. This guide will help you create high-quality PRs that are easy to review and likely to be merged.
+
+## Before Creating a PR
+
+<Steps>
+  <Step title="Ensure your code is ready">
+    Run all quality checks:
+
+    ```bash
+    # Type check
+    pnpm check-types
+
+    # Lint
+    pnpm lint
+
+    # Format
+    pnpm format
+
+    # Build
+    pnpm build
+    ```
+
+    All commands must pass without errors.
+  </Step>
+
+  <Step title="Test your changes">
+    - Test functionality manually in the browser
+    - Verify edge cases and error handling
+    - Check for console errors or warnings
+    - Test on different screen sizes (if UI changes)
+  </Step>
+
+  <Step title="Review your own code">
+    - Read through your changes as if reviewing someone else's code
+    - Remove debug code, console.logs, and commented code
+    - Ensure code follows the [Code Style](/development/contributing/code-style)
+    - Check that all changes are intentional
+  </Step>
+
+  <Step title="Update documentation">
+    - Update relevant documentation if behavior changes
+    - Add JSDoc comments to new public functions
+    - Update README files if necessary
+  </Step>
+</Steps>
+
+## Creating the Pull Request
+
+### 1. Push Your Branch
+
+```bash
+# Ensure you're on your feature branch
+git checkout feature/your-feature-name
+
+# Push to your fork
+git push origin feature/your-feature-name
+```
+
+### 2. Open PR on GitHub
+
+1. Go to the repository on GitHub
+2. Click "Pull requests" → "New pull request"
+3. Select your fork and branch
+4. Click "Create pull request"
+
+### 3. Write a Descriptive Title
+
+Follow the commit message convention:
+
+```
+type(scope): brief description
+```
+
+**Examples:**
+
+```
+✅ Good titles:
+feat(auth): add two-factor authentication
+fix(secure): prevent XSS in password notes
+docs(setup): update Node.js version requirements
+refactor(api): simplify error handling logic
+
+❌ Bad titles:
+Update code
+Fix bug
+Changes
+New feature
+```
+
+### 4. Fill Out the Description
+
+Provide a comprehensive description:
+
+```markdown
+## Summary
+Brief overview of what this PR does (1-2 sentences).
+
+## Changes
+- List of specific changes made
+- Each change on its own line
+- Be specific and detailed
+
+## Motivation
+Why are these changes needed? What problem do they solve?
+
+## Testing
+How were these changes tested?
+- [ ] Tested locally
+- [ ] Type checking passes
+- [ ] Linting passes
+- [ ] Build succeeds
+- [ ] Manual testing completed
+
+## Screenshots (if applicable)
+[Add screenshots for UI changes]
+
+## Related Issues
+Closes #123
+Related to #456
+
+## Additional Notes
+Any other context or information reviewers should know.
+```
+
+## PR Description Template
+
+Use this template for your PR description:
+
+```markdown
+## Summary
+<!-- Brief overview of the changes -->
+
+## Type of Change
+- [ ] Bug fix (non-breaking change that fixes an issue)
+- [ ] New feature (non-breaking change that adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to change)
+- [ ] Documentation update
+- [ ] Code refactoring
+- [ ] Performance improvement
+- [ ] Other (please describe):
+
+## Changes Made
+<!-- Detailed list of changes -->
+- 
+- 
+- 
+
+## Motivation and Context
+<!-- Why is this change required? What problem does it solve? -->
+
+## How Has This Been Tested?
+<!-- Describe how you tested your changes -->
+- [ ] Type checking (`pnpm check-types`)
+- [ ] Linting (`pnpm lint`)
+- [ ] Build succeeds (`pnpm build`)
+- [ ] Manual testing in browser
+- [ ] Tested edge cases
+- [ ] Tested error scenarios
+
+## Screenshots (if applicable)
+<!-- Add screenshots for UI changes -->
+
+## Checklist
+- [ ] My code follows the code style of this project
+- [ ] I have performed a self-review of my own code
+- [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have made corresponding changes to the documentation
+- [ ] My changes generate no new warnings or errors
+- [ ] I have tested my changes locally
+- [ ] All automated checks pass
+
+## Related Issues
+<!-- Link related issues -->
+Closes #
+Related to #
+
+## Additional Notes
+<!-- Any other information that reviewers should know -->
+```
+
+## PR Best Practices
+
+### Keep PRs Focused
+
+✅ **Good PR:**
+- Addresses one feature or bug
+- Changes 50-300 lines of code
+- Easy to review in 10-15 minutes
+- Single, clear purpose
+
+❌ **Bad PR:**
+- Multiple unrelated changes
+- Changes 1000+ lines of code
+- Mixes features, refactoring, and bug fixes
+- Hard to understand scope
+
+### Make Atomic Commits
+
+```bash
+# ✅ Good - focused commits
+git commit -m "feat(auth): add login form component"
+git commit -m "feat(auth): implement login API endpoint"
+git commit -m "feat(auth): add session management"
+
+# ❌ Bad - everything in one commit
+git commit -m "add authentication"
+```
+
+### Add Screenshots for UI Changes
+
+Always include screenshots for:
+- New UI components
+- Layout changes
+- Style updates
+- Visual bug fixes
+
+**Before and after:**
+```markdown
+### Before
+![Before](./before.png)
+
+### After
+![After](./after.png)
+```
+
+### Link Related Issues
+
+Connect your PR to issues:
+
+```markdown
+Closes #123        # Closes the issue
+Fixes #456         # Fixes the issue
+Resolves #789      # Resolves the issue
+Related to #101    # Links without closing
+```
+
+### Request Reviews
+
+Explicitly request reviews from:
+- Code owners (automatic)
+- Relevant team members
+- Subject matter experts
+
+## Responding to Feedback
+
+### Be Responsive
+
+- Respond to comments promptly
+- Ask clarifying questions if needed
+- Be open to suggestions and changes
+- Engage in constructive discussion
+
+### Making Changes
+
+```bash
+# Make requested changes
+git add .
+git commit -m "fix: address review feedback"
+git push origin feature/your-feature-name
+```
+
+The PR will update automatically.
+
+### Resolving Conversations
+
+- ✅ Mark conversations as resolved after addressing
+- ✅ Leave a comment explaining your changes
+- ✅ If you disagree, explain your reasoning respectfully
+- ❌ Don't resolve conversations without addressing them
+
+### Example Response
+
+```markdown
+Good point! I've updated the code to:
+- Extract the validation logic into a separate function
+- Add error handling for edge cases
+- Include JSDoc comments
+
+Let me know if this addresses your concern.
+```
+
+## After Your PR is Approved
+
+<Steps>
+  <Step title="Final checks">
+    Ensure all CI checks pass:
+    - ✅ Type checking
+    - ✅ Linting
+    - ✅ Build
+    - ✅ Any automated tests
+  </Step>
+
+  <Step title="Squash commits (if needed)">
+    If you have many small commits, consider squashing:
+
+    ```bash
+    git rebase -i HEAD~5  # Squash last 5 commits
+    ```
+
+    Or use GitHub's "Squash and merge" option.
+  </Step>
+
+  <Step title="Wait for merge">
+    A maintainer will merge your PR. Don't merge your own PRs unless you're a maintainer.
+  </Step>
+
+  <Step title="Delete your branch">
+    After merging, delete your feature branch:
+
+    ```bash
+    git branch -d feature/your-feature-name
+    git push origin --delete feature/your-feature-name
+    ```
+  </Step>
+</Steps>
+
+## Common PR Issues
+
+### Merge Conflicts
+
+If your PR has conflicts:
+
+```bash
+# Update your branch with latest main
+git checkout main
+git pull upstream main
+
+# Rebase your feature branch
+git checkout feature/your-feature-name
+git rebase main
+
+# Resolve conflicts, then:
+git add .
+git rebase --continue
+
+# Force push (be careful!)
+git push origin feature/your-feature-name --force
+```
+
+### Failing CI Checks
+
+If automated checks fail:
+
+1. Read the error messages carefully
+2. Fix the issues locally
+3. Run checks locally before pushing:
+   ```bash
+   pnpm check-types && pnpm lint && pnpm build
+   ```
+4. Push fixes and wait for checks to re-run
+
+### Stale PRs
+
+If your PR becomes stale:
+
+- Rebase on latest main
+- Address any outstanding feedback
+- Ping reviewers if needed
+- Consider if the PR is still relevant
+
+## PR Review Process
+
+### What Reviewers Look For
+
+1. **Correctness**: Does the code work as intended?
+2. **Code quality**: Is it well-written and maintainable?
+3. **Style**: Does it follow project conventions?
+4. **Tests**: Are changes properly tested?
+5. **Documentation**: Is documentation updated?
+6. **Performance**: Are there performance implications?
+7. **Security**: Are there security concerns?
+
+### Review Timeframe
+
+- Small PRs: 1-2 days
+- Medium PRs: 2-3 days
+- Large PRs: 3-5 days
+
+Complex or large PRs may take longer.
+
+### Getting Faster Reviews
+
+To get your PR reviewed quickly:
+
+- ✅ Keep PRs small and focused
+- ✅ Write clear descriptions
+- ✅ Respond to feedback promptly
+- ✅ Ensure all checks pass
+- ✅ Add screenshots for UI changes
+- ✅ Make reviewer's job easy
+
+## Draft PRs
+
+Use draft PRs for:
+
+- Work in progress
+- Getting early feedback
+- Demonstrating an approach
+- Long-running features
+
+```markdown
+## [WIP] Feature Name
+
+⚠️ **This PR is a work in progress**
+
+I'm working on implementing X feature and would like early feedback on the approach.
+
+### TODO
+- [ ] Complete implementation
+- [ ] Add tests
+- [ ] Update documentation
+
+### Questions
+- Is this the right approach?
+- Should I split this into multiple PRs?
+```
+
+## PR Size Guidelines
+
+| Size | Lines Changed | Review Time | Recommendation |
+|------|---------------|-------------|----------------|
+| XS | < 10 | < 5 min | Perfect |
+| S | 10-50 | 5-15 min | Great |
+| M | 50-200 | 15-30 min | Good |
+| L | 200-500 | 30-60 min | Consider splitting |
+| XL | > 500 | > 1 hour | Definitely split |
+
+## Example Good PRs
+
+### Example 1: Bug Fix
+
+```markdown
+## fix(auth): prevent session timeout during active use
+
+### Summary
+Fixes an issue where users were being logged out even while actively using the application.
+
+### Changes
+- Update session refresh logic to extend timeout on user activity
+- Add activity tracking for mouse and keyboard events
+- Debounce activity events to reduce API calls
+
+### Motivation
+Users reported being unexpectedly logged out while filling out forms. The session timeout was not being extended during active use.
+
+### Testing
+- [x] Tested locally with 5-minute timeout
+- [x] Verified session extends on user activity
+- [x] Confirmed no session extension when idle
+- [x] Type checking passes
+- [x] Linting passes
+- [x] Build succeeds
+
+### Related Issues
+Fixes #234
+```
+
+### Example 2: New Feature
+
+```markdown
+## feat(secure): add password strength indicator
+
+### Summary
+Adds a visual password strength indicator to the password creation form.
+
+### Changes
+- Create `PasswordStrength` component
+- Implement strength calculation algorithm
+- Add visual feedback with colors and text
+- Include strength requirements checklist
+- Add tests for strength calculation
+
+### Motivation
+Users requested better guidance when creating passwords. This helps them create strong passwords and reduces weak password attempts.
+
+### Screenshots
+![Password Strength](./strength-indicator.png)
+
+### Testing
+- [x] Tested with various password strengths
+- [x] Verified color coding (red/yellow/green)
+- [x] Tested accessibility with screen reader
+- [x] All checks pass
+
+### Related Issues
+Closes #456
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Contributing Guidelines" icon="code-pull-request" href="/development/contributing/guidelines">
+    General contribution guidelines
+  </Card>
+  <Card title="Code Style" icon="paintbrush" href="/development/contributing/code-style">
+    Follow the code style guide
+  </Card>
+  <Card title="Development Setup" icon="gear" href="/development/setup">
+    Set up your environment
+  </Card>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Test your changes
+  </Card>
+</CardGroup>

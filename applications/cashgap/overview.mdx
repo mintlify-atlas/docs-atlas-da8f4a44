@@ -1,0 +1,231 @@
+---
+title: CashGap Overview
+description: A comprehensive personal finance management application built with Next.js, MongoDB, and NextAuth
+---
+
+# CashGap Overview
+
+CashGap is a full-featured personal finance management application that helps users take control of their finances by tracking income, managing expenses, and monitoring subscriptions.
+
+## What is CashGap?
+
+CashGap provides a beautiful, easy-to-use platform for managing your financial life. Built with modern web technologies, it offers real-time insights into your spending habits, income sources, and recurring payments.
+
+<CardGroup cols={3}>
+  <Card title="Income Tracking" icon="trending-up">
+    Monitor all your income sources in one place. Track salary, freelance work, investments, and more.
+  </Card>
+  <Card title="Expense Management" icon="wallet">
+    Track and categorize expenses to understand where your money goes and find savings opportunities.
+  </Card>
+  <Card title="Subscription Tracking" icon="credit-card">
+    Keep tabs on recurring payments and avoid surprise charges with billing date reminders.
+  </Card>
+  <Card title="Visual Analytics" icon="pie-chart">
+    Beautiful charts and insights to visualize your financial health at a glance.
+  </Card>
+  <Card title="Budget Planning" icon="bar-chart-3">
+    Set budgets and track progress towards your financial goals.
+  </Card>
+  <Card title="Secure & Private" icon="shield">
+    Bank-level security with encrypted data storage and NextAuth authentication.
+  </Card>
+</CardGroup>
+
+## Key Features
+
+### Financial Dashboard
+
+The main dashboard provides a comprehensive overview of your finances:
+
+- **Total Balance**: Income minus expenses and subscriptions
+- **Income Summary**: Total income with source count
+- **Expense Summary**: Total expenses with item count
+- **Subscription Summary**: Active subscriptions and their monthly cost
+- **Recent Transactions**: Latest income and expense entries
+- **Spending by Category**: Visual breakdown of expenses by category
+
+### Multi-Category Support
+
+CashGap supports eight expense categories:
+
+- Food & Dining
+- Transportation
+- Shopping
+- Housing
+- Utilities
+- Entertainment
+- Health
+- Other
+
+Each category has custom icons and color coding for easy identification.
+
+### Flexible Income Tracking
+
+Track various income frequencies:
+- **One-time**: Bonuses, gifts, or irregular income
+- **Monthly**: Salary, freelance contracts
+- **Yearly**: Annual bonuses, tax returns
+
+## Technology Stack
+
+<Tabs>
+  <Tab title="Frontend">
+    - **Next.js 16**: React framework with App Router
+    - **React 19**: Latest React features
+    - **TypeScript**: Full type safety
+    - **Tailwind CSS 4**: Utility-first styling
+    - **Radix UI**: Accessible component primitives
+    - **Lucide React**: Beautiful icon library
+  </Tab>
+  <Tab title="Backend">
+    - **Next.js API Routes**: Serverless API endpoints
+    - **MongoDB**: NoSQL database with Mongoose ODM
+    - **NextAuth 5**: Authentication with credentials and OAuth
+    - **Zod**: Runtime validation
+    - **bcryptjs**: Password hashing
+  </Tab>
+  <Tab title="State Management">
+    - **Zustand**: Lightweight state management
+    - **TanStack Query**: Server state management with caching
+    - **React Query**: Data fetching and synchronization
+  </Tab>
+</Tabs>
+
+## Architecture
+
+### Database Models
+
+CashGap uses Mongoose schemas for data modeling:
+
+```typescript
+// Income Model
+interface IncomeDocument {
+  userId: string;
+  name: string;
+  amount: number;
+  frequency: "once" | "monthly" | "yearly";
+  date: Date;
+  category?: string;
+  note?: string;
+}
+
+// Expense Model
+interface ExpenseDocument {
+  userId: string;
+  name: string;
+  amount: number;
+  category: ExpenseCategory;
+  date: Date;
+  note?: string;
+}
+
+// Subscription Model
+interface SubscriptionDocument {
+  userId: string;
+  name: string;
+  amount: number;
+  frequency: "monthly" | "yearly";
+  nextBillingDate: Date;
+  category?: string;
+  active: boolean;
+  note?: string;
+}
+```
+
+### API Structure
+
+RESTful API routes with authentication:
+
+- `/api/auth/*` - Authentication endpoints
+- `/api/dashboard` - Aggregated dashboard data
+- `/api/income` - Income management
+- `/api/expenses` - Expense management
+- `/api/subscriptions` - Subscription management
+- `/api/user/*` - User profile and settings
+
+## Project Structure
+
+```
+cashgap/
+├── app/
+│   ├── (auth)/              # Authentication pages
+│   │   ├── login/
+│   │   └── register/
+│   ├── (dashboard)/         # Protected dashboard pages
+│   │   └── dashboard/
+│   ├── api/                 # API routes
+│   │   ├── auth/
+│   │   ├── income/
+│   │   ├── expenses/
+│   │   ├── subscriptions/
+│   │   └── user/
+│   ├── income/              # Income management pages
+│   ├── expenses/            # Expense management pages
+│   ├── subscriptions/       # Subscription management pages
+│   └── settings/            # User settings pages
+├── components/              # React components
+│   ├── ui/                  # UI components
+│   └── providers/           # Context providers
+├── lib/
+│   ├── db/                  # Database configuration
+│   │   ├── models.ts        # Mongoose models
+│   │   └── connection.ts    # MongoDB connection
+│   ├── api/                 # API utilities
+│   └── validations.ts       # Zod schemas
+├── hooks/                   # Custom React hooks
+└── stores/                  # Zustand stores
+```
+
+## Getting Started
+
+<Steps>
+  <Step title="Set up environment variables">
+    Create a `.env.local` file with the following:
+    
+    ```bash
+    MONGODB_URI=mongodb://localhost:27017/cashgap
+    NEXTAUTH_URL=http://localhost:3000
+    NEXTAUTH_SECRET=your-secret-here
+    GOOGLE_CLIENT_ID=optional
+    GOOGLE_CLIENT_SECRET=optional
+    ```
+  </Step>
+  
+  <Step title="Install dependencies">
+    ```bash
+    pnpm install
+    ```
+  </Step>
+  
+  <Step title="Start MongoDB">
+    ```bash
+    mongod
+    ```
+  </Step>
+  
+  <Step title="Run development server">
+    ```bash
+    pnpm --filter cashgap dev
+    ```
+    
+    The app will be available at `http://localhost:3000`
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Features" icon="sparkles" href="/applications/cashgap/features">
+    Explore all features in detail
+  </Card>
+  <Card title="Authentication" icon="lock" href="/applications/cashgap/authentication">
+    Learn about authentication setup
+  </Card>
+  <Card title="Income Tracking" icon="trending-up" href="/applications/cashgap/income-tracking">
+    Implement income tracking
+  </Card>
+  <Card title="Expense Management" icon="wallet" href="/applications/cashgap/expense-management">
+    Set up expense management
+  </Card>
+</CardGroup>

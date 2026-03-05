@@ -1,0 +1,346 @@
+---
+title: Input Components
+description: Form input components including text inputs and password inputs with validation and accessibility features
+---
+
+## Input
+
+The `Input` component is a flexible, accessible text input with optional label support.
+
+### Basic Usage
+
+```tsx
+import { Input } from "@repo/ui";
+
+function Example() {
+  return <Input placeholder="Enter your name" />;
+}
+```
+
+## Props
+
+<ParamField path="label" type="string">
+  Optional label text to display above the input.
+</ParamField>
+
+<ParamField path="type" type="string" default="text">
+  The HTML input type (text, email, number, etc.).
+</ParamField>
+
+<ParamField path="id" type="string">
+  The input ID. If not provided, a unique ID is auto-generated.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Additional CSS classes to apply to the input.
+</ParamField>
+
+<ParamField path="placeholder" type="string">
+  Placeholder text for the input.
+</ParamField>
+
+<ParamField path="disabled" type="boolean">
+  When `true`, disables the input.
+</ParamField>
+
+<ParamField path="aria-invalid" type="boolean">
+  When `true`, applies error styling (red border and ring).
+</ParamField>
+
+Plus all standard HTML input attributes.
+
+## With Label
+
+When you provide a `label` prop, the input automatically wraps in a labeled container:
+
+```tsx
+<Input 
+  label="Email Address" 
+  type="email"
+  placeholder="you@example.com"
+/>
+```
+
+The label is automatically associated with the input via matching IDs.
+
+## Validation States
+
+<Tabs>
+  <Tab title="Normal">
+    ```tsx
+    <Input placeholder="Normal input" />
+    ```
+  </Tab>
+  
+  <Tab title="Error">
+    Use `aria-invalid` to show error state:
+    
+    ```tsx
+    <Input 
+      placeholder="Invalid email"
+      aria-invalid={true}
+    />
+    ```
+    
+    This applies:
+    - Red border color
+    - Red focus ring
+  </Tab>
+  
+  <Tab title="Disabled">
+    ```tsx
+    <Input 
+      placeholder="Disabled input"
+      disabled
+    />
+    ```
+  </Tab>
+</Tabs>
+
+## Input Types
+
+```tsx
+// Email
+<Input type="email" placeholder="email@example.com" />
+
+// Number
+<Input type="number" placeholder="Amount" />
+
+// Date
+<Input type="date" />
+
+// File
+<Input type="file" />
+```
+
+The file input has special styling for the file selection button.
+
+## PasswordInput
+
+A specialized password input with visibility toggle and optional strength indicator.
+
+### Basic Usage
+
+```tsx
+import { PasswordInput } from "@repo/ui";
+
+function Example() {
+  const [password, setPassword] = useState("");
+  
+  return (
+    <PasswordInput
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      placeholder="Enter password"
+    />
+  );
+}
+```
+
+## PasswordInput Props
+
+<ParamField path="label" type="string">
+  Optional label text to display above the input.
+</ParamField>
+
+<ParamField path="showStrength" type="boolean" default="false">
+  When `true`, displays a password strength indicator.
+</ParamField>
+
+<ParamField path="strength" type="0 | 1 | 2 | 3 | 4" default="0">
+  The strength level of the password (0-4).
+  
+  - 0: Very Weak (red)
+  - 1: Weak (orange)
+  - 2: Fair (yellow)
+  - 3: Strong (lime)
+  - 4: Very Strong (green)
+</ParamField>
+
+<ParamField path="error" type="string">
+  Error message to display below the input.
+</ParamField>
+
+<ParamField path="id" type="string">
+  The input ID. If not provided, a unique ID is auto-generated.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Additional CSS classes to apply to the input.
+</ParamField>
+
+Plus all standard HTML input attributes.
+
+## Password Strength Indicator
+
+<Tabs>
+  <Tab title="Basic Strength">
+    ```tsx
+    function PasswordForm() {
+      const [password, setPassword] = useState("");
+      const [strength, setStrength] = useState(0);
+      
+      const calculateStrength = (pwd: string) => {
+        // Your strength calculation logic
+        if (pwd.length < 6) return 0;
+        if (pwd.length < 10) return 2;
+        return 4;
+      };
+      
+      return (
+        <PasswordInput
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setStrength(calculateStrength(e.target.value));
+          }}
+          showStrength
+          strength={strength}
+        />
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="With Error">
+    ```tsx
+    <PasswordInput
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      error="Password must be at least 8 characters"
+    />
+    ```
+    
+    When an error is present:
+    - Strength indicator is hidden
+    - Error message displays in red
+    - Input has red border
+  </Tab>
+</Tabs>
+
+## Visibility Toggle
+
+The `PasswordInput` includes a built-in eye icon button that toggles between:
+- Password hidden (type="password") - Shows Eye icon
+- Password visible (type="text") - Shows EyeOff icon
+
+```tsx
+<PasswordInput placeholder="Enter password" />
+```
+
+The toggle button:
+- Is positioned absolutely in the input
+- Has proper hover states
+- Uses lucide-react Eye/EyeOff icons
+
+## Complete Example
+
+```tsx
+import { Input, PasswordInput } from "@repo/ui";
+import { useState } from "react";
+
+function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  
+  const validateEmail = (email: string) => {
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    setEmailError(isValid ? "" : "Invalid email address");
+  };
+  
+  return (
+    <form className="space-y-4">
+      <Input
+        label="Email"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        onBlur={() => validateEmail(email)}
+        aria-invalid={!!emailError}
+        placeholder="you@example.com"
+      />
+      {emailError && (
+        <p className="text-sm text-red-500">{emailError}</p>
+      )}
+      
+      <PasswordInput
+        label="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Enter your password"
+      />
+      
+      <button type="submit">Sign In</button>
+    </form>
+  );
+}
+```
+
+## Signup Form with Strength
+
+```tsx
+function SignupForm() {
+  const [password, setPassword] = useState("");
+  const [strength, setStrength] = useState<0 | 1 | 2 | 3 | 4>(0);
+  
+  const calculateStrength = (pwd: string): 0 | 1 | 2 | 3 | 4 => {
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (pwd.length >= 12) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    return Math.min(score, 4) as 0 | 1 | 2 | 3 | 4;
+  };
+  
+  return (
+    <PasswordInput
+      label="Create Password"
+      value={password}
+      onChange={(e) => {
+        const newPassword = e.target.value;
+        setPassword(newPassword);
+        setStrength(calculateStrength(newPassword));
+      }}
+      showStrength
+      strength={strength}
+      placeholder="At least 8 characters"
+    />
+  );
+}
+```
+
+## TypeScript Types
+
+```tsx
+interface InputProps extends React.ComponentProps<"input"> {
+  label?: string;
+}
+
+interface PasswordInputProps extends React.ComponentProps<"input"> {
+  label?: string;
+  showStrength?: boolean;
+  strength?: 0 | 1 | 2 | 3 | 4;
+  error?: string;
+}
+```
+
+## Styling Details
+
+Inputs feature:
+- **Rounded corners** - `rounded-xl` (12px border radius)
+- **Focus rings** - 3px ring with primary color
+- **Shadow** - Subtle `shadow-xs`
+- **Height** - 48px (h-12) for comfortable touch targets
+- **Dark mode** - Semi-transparent background in dark mode
+- **Selection** - Custom selection color matching primary theme
+
+## Accessibility
+
+- Auto-generated IDs ensure label-input association
+- Proper focus indicators
+- ARIA invalid states for errors
+- Disabled states prevent interaction
+- Password toggle has proper button semantics
+- Screen reader friendly error messages

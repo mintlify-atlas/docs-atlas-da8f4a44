@@ -1,0 +1,572 @@
+---
+title: Income Tracking
+description: Complete guide to implementing income tracking features in CashGap
+---
+
+# Income Tracking
+
+The income tracking feature allows users to monitor all their income sources, categorize by frequency, and view comprehensive statistics.
+
+## Income Model
+
+### Database Schema
+
+The income model is defined using Mongoose:
+
+```typescript title="lib/db/models.ts"
+export interface IncomeDocument extends Document {
+  userId: string;
+  name: string;
+  amount: number;
+  frequency: "once" | "monthly" | "yearly";
+  date: Date;
+  category?: string;
+  note?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const incomeSchema = new Schema<IncomeDocument>({
+  userId: { type: String, required: true, index: true },
+  name: { type: String, required: true, trim: true },
+  amount: { type: Number, required: true, min: 0 },
+  frequency: {
+    type: String,
+    required: true,
+    enum: ["once", "monthly", "yearly"],
+    default: "once",
+  },
+  date: { type: Date, required: true },
+  category: { type: String, trim: true },
+  note: { type: String, trim: true },
+}, { timestamps: true });
+
+// Compound index for efficient user queries
+incomeSchema.index({ userId: 1, date: -1 });
+
+export const IncomeModel: Model<IncomeDocument> =
+  mongoose.models.Income ||
+  mongoose.model<IncomeDocument>("Income", incomeSchema);
+```
+
+### Income Frequencies
+
+<Tabs>
+  <Tab title="One-time">
+    **Use cases:** Bonuses, tax refunds, gifts, settlements, one-time gigs
+    
+    One-time income entries represent irregular income that doesn't repeat on a schedule.
+  </Tab>
+  <Tab title="Monthly">
+    **Use cases:** Salary, freelance retainers, rental income, monthly dividends
+    
+    Monthly income represents regular income received every month.
+  </Tab>
+  <Tab title="Yearly">
+    **Use cases:** Annual bonuses, yearly dividends, tax returns, annual contracts
+    
+    Yearly income represents income received once per year.
+  </Tab>
+</Tabs>
+
+## API Endpoints
+
+### Get All Incomes
+
+Retrieve all income entries for the authenticated user:
+
+```typescript title="app/api/income/route.ts"
+import { NextRequest } from "next/server";
+import { connectDB } from "@/lib/db/connection";
+import { IncomeModel } from "@/lib/db/models";
+import {
+  authenticateRequest,
+  getPaginationParams,
+  paginatedResponse,
+} from "@/lib/api/utils";
+
+export async function GET(request: NextRequest) {
+  try {
+    const { auth, error: authError } = await authenticateRequest(request);
+    if (authError) return authError;
+
+    await connectDB();
+
+    const pagination = getPaginationParams(request);
+    const url = new URL(request.url);
+
+    // Build query filters
+    const query: Record<string, unknown> = { userId: auth.userId };
+
+    // Optional date range filter
+    const startDate = url.searchParams.get("startDate");
+    const endDate = url.searchParams.get("endDate");
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) query.date.$gte = new Date(startDate);
+      if (endDate) query.date.$lte = new Date(endDate);
+    }
+
+    // Optional category filter
+    const category = url.searchParams.get("category");
+    if (category) {
+      query.category = category;
+    }
+
+    // Get total count and items
+    const [total, incomes] = await Promise.all([
+      IncomeModel.countDocuments(query),
+      IncomeModel.find(query)
+        .sort({ date: -1 })
+        .skip(pagination.skip)
+        .limit(pagination.limit)
+        .lean(),
+    ]);
+
+    // Transform to client format
+    const items = incomes.map((income) => ({
+      id: income._id.toString(),
+      name: income.name,
+      amount: income.amount,
+      frequency: income.frequency,
+      date: income.date.toISOString(),
+      category: income.category,
+      note: income.note,
+      createdAt: income.createdAt.toISOString(),
+      updatedAt: income.updatedAt.toISOString(),
+    }));
+
+    return paginatedResponse(items, total, pagination);
+  } catch (error) {
+    console.error("Income list error:", error);
+    return errorResponse("INTERNAL_ERROR", "Failed to fetch incomes", 500);
+  }
+}
+```
+
+**Query Parameters:**
+- `page` - Page number (default: 1)
+- `limit` - Items per page (default: 50)
+- `startDate` - Filter by start date (ISO format)
+- `endDate` - Filter by end date (ISO format)
+- `category` - Filter by category
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "507f1f77bcf86cd799439011",
+      "name": "Monthly Salary",
+      "amount": 5000,
+      "frequency": "monthly",
+      "date": "2024-01-01T00:00:00.000Z",
+      "category": "Salary",
+      "note": "Tech company salary",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 15,
+    "pages": 1
+  }
+}
+```
+
+### Create Income
+
+Create a new income entry:
+
+```typescript title="app/api/income/route.ts"
+import { createIncomeSchema } from "@/lib/validations";
+import { parseBody } from "@/lib/api/utils";
+
+export async function POST(request: NextRequest) {
+  try {
+    const { auth, error: authError } = await authenticateRequest(request);
+    if (authError) return authError;
+
+    const { data, error: parseError } = await parseBody(
+      request,
+      createIncomeSchema
+    );
+    if (parseError) return parseError;
+
+    await connectDB();
+
+    const income = await IncomeModel.create({
+      userId: auth.userId,
+      name: data.name,
+      amount: data.amount,
+      frequency: data.frequency,
+      date: new Date(data.date),
+      category: data.category,
+      note: data.note,
+    });
+
+    return successResponse(
+      {
+        id: income._id.toString(),
+        name: income.name,
+        amount: income.amount,
+        frequency: income.frequency,
+        date: income.date.toISOString(),
+        category: income.category,
+        note: income.note,
+        createdAt: income.createdAt.toISOString(),
+        updatedAt: income.updatedAt.toISOString(),
+      },
+      201
+    );
+  } catch (error) {
+    console.error("Income create error:", error);
+    return errorResponse("INTERNAL_ERROR", "Failed to create income", 500);
+  }
+}
+```
+
+**Request Body:**
+```json
+{
+  "name": "Freelance Project",
+  "amount": 2500,
+  "frequency": "once",
+  "date": "2024-03-15",
+  "category": "Freelance",
+  "note": "Website redesign project"
+}
+```
+
+### Update Income
+
+Update an existing income entry:
+
+```typescript title="app/api/income/[id]/route.ts"
+import { updateIncomeSchema } from "@/lib/validations";
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { auth, error: authError } = await authenticateRequest(request);
+    if (authError) return authError;
+
+    const { data, error: parseError } = await parseBody(
+      request,
+      updateIncomeSchema
+    );
+    if (parseError) return parseError;
+
+    await connectDB();
+
+    const income = await IncomeModel.findOneAndUpdate(
+      { _id: params.id, userId: auth.userId },
+      {
+        ...data,
+        ...(data.date && { date: new Date(data.date) }),
+      },
+      { new: true }
+    );
+
+    if (!income) {
+      return errorResponse("NOT_FOUND", "Income not found", 404);
+    }
+
+    return successResponse({
+      id: income._id.toString(),
+      name: income.name,
+      amount: income.amount,
+      frequency: income.frequency,
+      date: income.date.toISOString(),
+      category: income.category,
+      note: income.note,
+      createdAt: income.createdAt.toISOString(),
+      updatedAt: income.updatedAt.toISOString(),
+    });
+  } catch (error) {
+    console.error("Income update error:", error);
+    return errorResponse("INTERNAL_ERROR", "Failed to update income", 500);
+  }
+}
+```
+
+### Delete Income
+
+Delete an income entry:
+
+```typescript title="app/api/income/[id]/route.ts"
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { auth, error: authError } = await authenticateRequest(request);
+    if (authError) return authError;
+
+    await connectDB();
+
+    const income = await IncomeModel.findOneAndDelete({
+      _id: params.id,
+      userId: auth.userId,
+    });
+
+    if (!income) {
+      return errorResponse("NOT_FOUND", "Income not found", 404);
+    }
+
+    return successResponse({ message: "Income deleted successfully" });
+  } catch (error) {
+    console.error("Income delete error:", error);
+    return errorResponse("INTERNAL_ERROR", "Failed to delete income", 500);
+  }
+}
+```
+
+## Validation
+
+Income validation using Zod:
+
+```typescript title="lib/validations.ts"
+import { z } from "zod";
+
+export const createIncomeSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  amount: z.number().positive("Amount must be positive"),
+  frequency: z.enum(["once", "monthly", "yearly"]),
+  date: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: "Invalid date format",
+  }),
+  category: z.string().max(50).optional(),
+  note: z.string().max(500).optional(),
+});
+
+export const updateIncomeSchema = createIncomeSchema.partial();
+
+export type CreateIncomeInput = z.infer<typeof createIncomeSchema>;
+export type UpdateIncomeInput = z.infer<typeof updateIncomeSchema>;
+```
+
+## Income Page UI
+
+The income listing page displays all income sources:
+
+```typescript title="app/income/page.tsx"
+import { useDashboardData } from "@/hooks";
+import { Button, DashboardWrapper } from "@repo/ui";
+import Link from "next/link";
+import { Plus, TrendingUp, DollarSign, Calendar, Clock } from "lucide-react";
+
+export default function IncomePage() {
+  const { data, isLoading } = useDashboardData();
+  const incomes = data?.incomes ?? [];
+
+  // Calculate totals
+  const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
+  const monthlyIncome = incomes
+    .filter(i => i.frequency === "monthly")
+    .reduce((sum, i) => sum + i.amount, 0);
+  const yearlyIncome = incomes
+    .filter(i => i.frequency === "yearly")
+    .reduce((sum, i) => sum + i.amount, 0);
+
+  return (
+    <DashboardWrapper className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Income</h1>
+          <p className="text-muted-foreground text-lg">
+            Track and manage your income sources
+          </p>
+        </div>
+        <Button asChild className="rounded-2xl">
+          <Link href="/income/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Income
+          </Link>
+        </Button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          label="Total Income"
+          value={totalIncome}
+          icon={DollarSign}
+          iconColor="text-green-500"
+          iconBg="bg-green-500/10"
+        />
+        <StatCard
+          label="Monthly Income"
+          value={monthlyIncome}
+          icon={Calendar}
+          iconColor="text-blue-500"
+          iconBg="bg-blue-500/10"
+          suffix="/mo"
+        />
+        <StatCard
+          label="Yearly Income"
+          value={yearlyIncome}
+          icon={Clock}
+          iconColor="text-purple-500"
+          iconBg="bg-purple-500/10"
+          suffix="/yr"
+        />
+      </div>
+
+      {/* Income List */}
+      {incomes.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <div className="space-y-3">
+          {incomes.map((income) => (
+            <IncomeCard key={income.id} income={income} />
+          ))}
+        </div>
+      )}
+    </DashboardWrapper>
+  );
+}
+```
+
+### Income Card Component
+
+Individual income card with actions:
+
+```typescript
+function IncomeCard({ income }: { income: Income }) {
+  const { deleteIncome } = useFinanceStore();
+  const { addToast } = useToast();
+  const queryClient = useQueryClient();
+
+  const frequencyLabels = {
+    once: "One-time",
+    monthly: "Monthly",
+    yearly: "Yearly",
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteIncome(income.id);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+      addToast({
+        type: "success",
+        title: "Income deleted",
+        message: `"${income.name}" has been deleted`,
+      });
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Failed to delete",
+        message: "Please try again.",
+      });
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between p-5 rounded-3xl border bg-card">
+      <div className="flex items-center gap-4">
+        <div className="h-12 w-12 rounded-2xl bg-green-500/10 flex items-center justify-center">
+          <TrendingUp className="h-6 w-6 text-green-500" />
+        </div>
+        <div>
+          <h3 className="font-semibold">{income.name}</h3>
+          <p className="text-sm text-muted-foreground">
+            {frequencyLabels[income.frequency]} • {formatDate(income.date)}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <p className="text-xl font-bold text-green-600">
+          +{formatCurrency(income.amount)}
+        </p>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-2.5 hover:bg-muted rounded-2xl">
+              <MoreVertical className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href={`/income/${income.id}/edit`}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={handleDelete}
+              className="text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}
+```
+
+## State Management
+
+Income state is managed with Zustand:
+
+```typescript title="stores/finance-store.ts"
+import { create } from "zustand";
+
+interface FinanceStore {
+  deleteIncome: (id: string) => Promise<void>;
+}
+
+export const useFinanceStore = create<FinanceStore>((set) => ({
+  deleteIncome: async (id: string) => {
+    const response = await fetch(`/api/income/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to delete income");
+    }
+  },
+}));
+```
+
+## Data Fetching
+
+Income data is fetched using TanStack Query:
+
+```typescript title="hooks/use-finance.ts"
+import { useQuery } from "@tanstack/react-query";
+
+export const queryKeys = {
+  dashboard: ['dashboard'],
+  incomes: ['incomes'],
+};
+
+export function useDashboardData() {
+  return useQuery({
+    queryKey: queryKeys.dashboard,
+    queryFn: async () => {
+      const response = await fetch('/api/dashboard');
+      if (!response.ok) throw new Error('Failed to fetch dashboard data');
+      return response.json();
+    },
+  });
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Expense Management" icon="wallet" href="/applications/cashgap/expense-management">
+    Learn about expense tracking implementation
+  </Card>
+  <Card title="Subscriptions" icon="credit-card" href="/applications/cashgap/subscriptions">
+    Explore subscription management features
+  </Card>
+</CardGroup>

@@ -1,0 +1,126 @@
+---
+title: "Introduction"
+description: "Welcome to the Money monorepo - a modern TypeScript platform for personal finance and secure password management"
+---
+
+## What is Money?
+
+Money is a full-featured TypeScript monorepo that combines powerful personal finance management with secure password storage. Built with modern web technologies, it provides two flagship applications alongside a robust shared component library.
+
+<CardGroup cols={2}>
+  <Card title="CashGap" icon="wallet" href="/applications/cashgap/overview">
+    Track income, manage expenses, and monitor subscriptions in one beautiful platform
+  </Card>
+  <Card title="SecureVault" icon="lock" href="/applications/securevault/overview">
+    Store and manage passwords securely with encryption and advanced security features
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Turborepo Monorepo" icon="git-alt">
+    Efficient build system with Turborepo for managing multiple Next.js applications
+  </Card>
+  <Card title="TypeScript-First" icon="code">
+    Full type safety across the entire codebase with strict type checking
+  </Card>
+  <Card title="Modern Design System" icon="palette">
+    Dark-first UI with Tailwind CSS v4 and OKLCH color system
+  </Card>
+  <Card title="Secure Authentication" icon="shield-halved">
+    NextAuth.js with MongoDB for robust user authentication and session management
+  </Card>
+</CardGroup>
+
+## Architecture
+
+The Money monorepo is organized into three main areas:
+
+### Applications
+
+- **CashGap** - Personal finance management with income tracking, expense categorization, and subscription monitoring
+- **SecureVault** - Password manager with encryption, favorites, categories, and security analytics
+- **Web** - Landing pages and marketing site
+
+### Shared Packages
+
+- **@repo/ui** - Comprehensive component library with 30+ reusable React components
+- **@repo/auth** - Authentication utilities and components
+- **@repo/eslint-config** - Shared ESLint configuration
+- **@repo/typescript-config** - Shared TypeScript configuration
+
+### Design System
+
+A consistent, modern design system featuring:
+- OKLCH-based color palette for perceptually uniform colors
+- Large border radius (20px) for friendly, modern interfaces
+- Radix UI primitives for accessible, unstyled components
+- Responsive-first approach with mobile-optimized layouts
+
+## Quick Start
+
+<CardGroup cols={2}>
+  <Card title="Get Started" icon="rocket" href="/quickstart">
+    Follow our quickstart guide to set up and run the monorepo locally
+  </Card>
+  <Card title="Monorepo Structure" icon="folder-tree" href="/monorepo-structure">
+    Understand the organization and architecture of the project
+  </Card>
+  <Card title="Development Setup" icon="code" href="/development/setup">
+    Set up your development environment with all required tools
+  </Card>
+  <Card title="Contributing" icon="users" href="/development/contributing/guidelines">
+    Learn how to contribute to the Money monorepo
+  </Card>
+</CardGroup>
+
+## Technology Stack
+
+Money is built with modern, production-ready technologies:
+
+- **Framework**: Next.js 16 with App Router
+- **Language**: TypeScript 5.9
+- **Styling**: Tailwind CSS v4 with PostCSS
+- **UI Components**: Radix UI primitives
+- **Authentication**: NextAuth.js 5.0 (beta)
+- **Database**: MongoDB with Mongoose
+- **Monorepo Tool**: Turborepo 2.7
+- **Package Manager**: pnpm 9.0
+- **State Management**: Zustand
+- **Data Fetching**: TanStack Query (React Query)
+
+## Use Cases
+
+### For Personal Finance Management
+
+- Track multiple income sources with detailed records
+- Categorize and analyze expenses by type, date, and amount
+- Monitor recurring subscriptions and avoid unwanted charges
+- View financial analytics with beautiful charts and visualizations
+- Set budgets and track progress towards financial goals
+
+### For Password Security
+
+- Store unlimited passwords with bank-level encryption
+- Organize credentials by categories and tags
+- Identify weak, reused, or compromised passwords
+- Quick access to favorite passwords
+- Security analytics and password health monitoring
+
+## What's Next?
+
+<Steps>
+  <Step title="Set up the monorepo">
+    Clone the repository and install dependencies with our [quickstart guide](/quickstart)
+  </Step>
+  <Step title="Explore the applications">
+    Learn about [CashGap](/applications/cashgap/overview) and [SecureVault](/applications/securevault/overview)
+  </Step>
+  <Step title="Understand the packages">
+    Dive into the [shared UI components](/packages/ui/overview) and [design system](/packages/design-system/colors)
+  </Step>
+  <Step title="Start developing">
+    Check out the [development guide](/development/setup) to start building
+  </Step>
+</Steps>

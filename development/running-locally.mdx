@@ -1,0 +1,287 @@
+---
+title: Running Locally
+description: Start development servers and work with the Money monorepo locally
+---
+
+## Development Server
+
+The Money monorepo uses Turborepo to manage multiple applications. You can run all apps simultaneously or run individual apps as needed.
+
+### Run All Apps
+
+To start all development servers at once:
+
+<CodeGroup>
+  ```bash pnpm
+  pnpm dev
+  ```
+
+  ```bash npm
+  npm run dev
+  ```
+
+  ```bash yarn
+  yarn dev
+  ```
+</CodeGroup>
+
+This command will start all apps in parallel using Turborepo's task orchestration.
+
+<Warning>
+  Make sure you have set up your environment variables before running the dev servers. See [Environment Variables](/development/deployment/environment-variables) for details.
+</Warning>
+
+## Running Individual Apps
+
+You can run a specific app using Turborepo's `--filter` flag:
+
+### Web App
+
+The main landing/marketing website:
+
+```bash
+pnpm dev --filter=web
+```
+
+- **URL**: http://localhost:3000
+- **Port**: 3000
+- **Description**: Main marketing and landing pages
+
+### Secure App
+
+Password manager and secure vault application:
+
+```bash
+pnpm dev --filter=secure
+```
+
+- **URL**: http://localhost:3000
+- **Port**: 3000
+- **Description**: SecureVault password management app
+- **Features**: Authentication, password storage, OAuth integration
+
+### CashGap App
+
+Financial tracking and management application:
+
+```bash
+pnpm dev --filter=cashgap
+```
+
+- **URL**: http://localhost:3000
+- **Port**: 3000
+- **Description**: Financial tracking and cash flow management
+- **Features**: Transaction tracking, authentication, email notifications
+
+### Docs App
+
+Documentation site (this site):
+
+```bash
+pnpm dev --filter=docs
+```
+
+- **URL**: http://localhost:3001
+- **Port**: 3001
+- **Description**: Documentation and guides
+
+<Warning>
+  The web, secure, and cashgap apps all default to port 3000. If you need to run multiple apps simultaneously, you'll need to modify the port in the respective package.json files or use the `--port` flag:
+  
+  ```bash
+  cd apps/secure
+  pnpm dev -- --port 3002
+  ```
+</Warning>
+
+## Development Workflow
+
+<Steps>
+  <Step title="Start the development server">
+    Choose which app(s) you want to work on and start the appropriate dev server(s).
+
+    ```bash
+    pnpm dev --filter=secure
+    ```
+  </Step>
+
+  <Step title="Make your changes">
+    Edit files in the `apps/` or `packages/` directories. The dev server will automatically reload when you save changes.
+
+    Hot Module Replacement (HMR) is enabled by default in Next.js, so most changes will appear instantly.
+  </Step>
+
+  <Step title="Check for errors">
+    Watch the terminal output for any errors or warnings. TypeScript errors will appear in real-time.
+
+    You can also run type checking manually:
+    ```bash
+    pnpm check-types
+    ```
+  </Step>
+
+  <Step title="Test in the browser">
+    Open the app in your browser and verify your changes work as expected.
+  </Step>
+</Steps>
+
+## Available Scripts
+
+These scripts are available at the root level and work across all apps:
+
+### `pnpm dev`
+
+Starts all development servers in watch mode. Changes to files will trigger hot reloads.
+
+```bash
+pnpm dev
+```
+
+**Turbo configuration**: Uses `cache: false` and `persistent: true` for optimal dev experience.
+
+### `pnpm build`
+
+Builds all apps for production. See [Building](/development/building) for details.
+
+```bash
+pnpm build
+```
+
+### `pnpm lint`
+
+Runs ESLint across all apps and packages:
+
+```bash
+pnpm lint
+```
+
+Fix linting issues automatically:
+```bash
+pnpm lint -- --fix
+```
+
+### `pnpm format`
+
+Formats all TypeScript, TSX, and Markdown files using Prettier:
+
+```bash
+pnpm format
+```
+
+### `pnpm check-types`
+
+Runs TypeScript type checking across all apps:
+
+```bash
+pnpm check-types
+```
+
+## App-Specific Scripts
+
+Each app has its own scripts that can be run from within the app directory:
+
+### Web, Docs, and CashGap
+
+```bash
+cd apps/web  # or apps/docs, apps/cashgap
+pnpm dev              # Start dev server on port 3000 (3001 for docs)
+pnpm build            # Build for production
+pnpm start            # Start production server
+pnpm lint             # Run ESLint (max 0 warnings)
+pnpm check-types      # Run TypeScript type checking
+```
+
+### Secure
+
+```bash
+cd apps/secure
+pnpm dev              # Start dev server on port 3000
+pnpm build            # Build for production
+pnpm start            # Start production server
+pnpm lint             # Run ESLint
+```
+
+## Working with Packages
+
+The monorepo includes shared packages that are used across apps:
+
+- **`@repo/ui`**: Shared React components
+- **`@repo/auth`**: Authentication utilities
+- **`@repo/eslint-config`**: Shared ESLint configuration
+- **`@repo/typescript-config`**: Shared TypeScript configuration
+
+When you make changes to a package, Turborepo automatically rebuilds dependent apps thanks to its dependency graph.
+
+## Debugging
+
+### Enable Debug Logs
+
+To see detailed Turborepo logs:
+
+```bash
+TURBO_LOG=debug pnpm dev
+```
+
+### Next.js Debugging
+
+For Next.js-specific debugging, you can use the Node debugger:
+
+```bash
+NODE_OPTIONS='--inspect' pnpm dev --filter=secure
+```
+
+Then attach your debugger (VS Code, Chrome DevTools) to the process.
+
+### Common Issues
+
+**Port already in use**
+
+If you see an error about port 3000 being in use:
+
+```bash
+# Find the process using the port
+lsof -i :3000
+
+# Kill the process
+kill -9 <PID>
+```
+
+**Module not found errors**
+
+If you encounter module resolution issues:
+
+```bash
+# Clear Turborepo cache
+pnpm turbo clean
+
+# Reinstall dependencies
+rm -rf node_modules
+pnpm install
+```
+
+**Database connection errors**
+
+Ensure your MongoDB instance is running and the `MONGODB_URI` in your `.env` file is correct. See [Database Setup](/development/deployment/database-setup).
+
+## Performance Tips
+
+1. **Use filters**: When working on a specific app, use `--filter` to only run that app's dev server
+2. **Turbo cache**: Turborepo caches task outputs to speed up subsequent runs
+3. **Parallel execution**: Turborepo runs tasks in parallel when possible, respecting dependencies
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Building" icon="hammer" href="/development/building">
+    Learn about the production build process
+  </Card>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Write and run tests
+  </Card>
+  <Card title="Environment Variables" icon="key" href="/development/deployment/environment-variables">
+    Configure your environment
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing/guidelines">
+    Contribution guidelines
+  </Card>
+</CardGroup>

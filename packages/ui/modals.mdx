@@ -1,0 +1,423 @@
+---
+title: Modal Components
+description: Modal dialogs and confirmation dialogs for user interactions and confirmations
+---
+
+## Modal
+
+A flexible modal dialog component with backdrop, animations, and keyboard support.
+
+### Basic Usage
+
+```tsx
+import { Modal } from "@repo/ui";
+import { useState } from "react";
+
+function Example() {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <>
+      <button onClick={() => setIsOpen(true)}>Open Modal</button>
+      
+      <Modal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Modal Title"
+        description="This is a description of the modal"
+      >
+        <p>Modal content goes here</p>
+      </Modal>
+    </>
+  );
+}
+```
+
+## Modal Props
+
+<ParamField path="isOpen" type="boolean" required>
+  Controls whether the modal is visible.
+</ParamField>
+
+<ParamField path="onClose" type="() => void" required>
+  Callback function called when the modal should close.
+</ParamField>
+
+<ParamField path="title" type="string">
+  Optional title displayed in the modal header.
+</ParamField>
+
+<ParamField path="description" type="string">
+  Optional description displayed below the title.
+</ParamField>
+
+<ParamField path="children" type="ReactNode" required>
+  The content to display in the modal body.
+</ParamField>
+
+<ParamField path="size" type="string" default="md">
+  The size of the modal.
+  
+  Options: `sm`, `md`, `lg`, `xl`
+  
+  - `sm` - max-w-sm (384px)
+  - `md` - max-w-md (448px)
+  - `lg` - max-w-lg (512px)
+  - `xl` - max-w-xl (576px)
+</ParamField>
+
+## Modal Sizes
+
+<Tabs>
+  <Tab title="Small">
+    ```tsx
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="sm"
+      title="Small Modal"
+    >
+      <p>Compact content</p>
+    </Modal>
+    ```
+  </Tab>
+  
+  <Tab title="Medium (Default)">
+    ```tsx
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      title="Medium Modal"
+    >
+      <p>Standard content</p>
+    </Modal>
+    ```
+  </Tab>
+  
+  <Tab title="Large">
+    ```tsx
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      title="Large Modal"
+    >
+      <p>More content space</p>
+    </Modal>
+    ```
+  </Tab>
+  
+  <Tab title="Extra Large">
+    ```tsx
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="xl"
+      title="Extra Large Modal"
+    >
+      <p>Maximum content space</p>
+    </Modal>
+    ```
+  </Tab>
+</Tabs>
+
+## Features
+
+### Backdrop Click to Close
+
+Clicking the backdrop (dark overlay) automatically calls `onClose`:
+
+```tsx
+<Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+  Content
+</Modal>
+```
+
+### Escape Key to Close
+
+Pressing the Escape key automatically calls `onClose`. This is handled internally.
+
+### Body Scroll Lock
+
+When the modal is open, the body scroll is locked to prevent background scrolling. This is automatically restored when the modal closes.
+
+### Close Button
+
+A close button (X icon) is always displayed in the top-right corner:
+
+```tsx
+// Automatically included - no need to add your own
+<Modal isOpen={isOpen} onClose={handleClose}>
+  Content
+</Modal>
+```
+
+### Animations
+
+The modal includes smooth enter animations:
+- Fade in
+- Zoom in (scale from 95% to 100%)
+- 200ms duration
+
+## ConfirmDialog
+
+A specialized modal for confirmation prompts with pre-styled action buttons.
+
+### Basic Usage
+
+```tsx
+import { ConfirmDialog } from "@repo/ui";
+import { useState } from "react";
+
+function DeleteButton() {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    await deleteItem();
+    setIsDeleting(false);
+    setShowConfirm(false);
+  };
+  
+  return (
+    <>
+      <button onClick={() => setShowConfirm(true)}>Delete</button>
+      
+      <ConfirmDialog
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleDelete}
+        title="Delete Item"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isDeleting}
+      />
+    </>
+  );
+}
+```
+
+## ConfirmDialog Props
+
+<ParamField path="isOpen" type="boolean" required>
+  Controls whether the dialog is visible.
+</ParamField>
+
+<ParamField path="onClose" type="() => void" required>
+  Callback function called when the dialog should close.
+</ParamField>
+
+<ParamField path="onConfirm" type="() => void" required>
+  Callback function called when the confirm button is clicked.
+</ParamField>
+
+<ParamField path="title" type="string" required>
+  The dialog title/heading.
+</ParamField>
+
+<ParamField path="message" type="string" required>
+  The confirmation message/question.
+</ParamField>
+
+<ParamField path="confirmText" type="string" default="Confirm">
+  Text for the confirm button.
+</ParamField>
+
+<ParamField path="cancelText" type="string" default="Cancel">
+  Text for the cancel button.
+</ParamField>
+
+<ParamField path="variant" type="string" default="danger">
+  The visual style variant that affects the confirm button.
+  
+  Options: `danger`, `warning`, `info`
+  
+  - `danger` - Red destructive button
+  - `warning` - Outline button
+  - `info` - Default primary button
+</ParamField>
+
+<ParamField path="isLoading" type="boolean" default="false">
+  When `true`, shows loading spinner on confirm button and disables both buttons.
+</ParamField>
+
+## ConfirmDialog Variants
+
+<Tabs>
+  <Tab title="Danger">
+    Use for destructive actions like deletion:
+    
+    ```tsx
+    <ConfirmDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={handleDelete}
+      title="Delete Account"
+      message="This will permanently delete your account and all data."
+      variant="danger"
+      confirmText="Delete Account"
+    />
+    ```
+  </Tab>
+  
+  <Tab title="Warning">
+    Use for actions that need caution:
+    
+    ```tsx
+    <ConfirmDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={handleReset}
+      title="Reset Settings"
+      message="This will reset all settings to default values."
+      variant="warning"
+      confirmText="Reset"
+    />
+    ```
+  </Tab>
+  
+  <Tab title="Info">
+    Use for general confirmations:
+    
+    ```tsx
+    <ConfirmDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={handleSubmit}
+      title="Submit Form"
+      message="Are you ready to submit this form?"
+      variant="info"
+      confirmText="Submit"
+    />
+    ```
+  </Tab>
+</Tabs>
+
+## Complete Example
+
+```tsx
+import { Modal, ConfirmDialog, Button } from "@repo/ui";
+import { useState } from "react";
+
+function UserProfile() {
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [name, setName] = useState("John Doe");
+  
+  const handleSave = () => {
+    // Save logic
+    setEditOpen(false);
+  };
+  
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteUser();
+      // Handle success
+    } finally {
+      setIsDeleting(false);
+      setDeleteOpen(false);
+    }
+  };
+  
+  return (
+    <div>
+      <h1>{name}</h1>
+      
+      <div className="flex gap-2">
+        <Button onClick={() => setEditOpen(true)}>Edit Profile</Button>
+        <Button 
+          variant="destructive"
+          onClick={() => setDeleteOpen(true)}
+        >
+          Delete Account
+        </Button>
+      </div>
+      
+      {/* Edit Modal */}
+      <Modal
+        isOpen={editOpen}
+        onClose={() => setEditOpen(false)}
+        title="Edit Profile"
+        description="Update your profile information"
+        size="md"
+      >
+        <div className="space-y-4">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>Save Changes</Button>
+          </div>
+        </div>
+      </Modal>
+      
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed."
+        confirmText="Delete Account"
+        cancelText="Keep Account"
+        variant="danger"
+        isLoading={isDeleting}
+      />
+    </div>
+  );
+}
+```
+
+## TypeScript Types
+
+```tsx
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  description?: string;
+  children: React.ReactNode;
+  size?: "sm" | "md" | "lg" | "xl";
+}
+
+interface ConfirmDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: "danger" | "warning" | "info";
+  isLoading?: boolean;
+}
+```
+
+## Accessibility
+
+- **Focus trap** - Focus is trapped within the modal
+- **Escape key** - Closes modal when pressed
+- **Backdrop click** - Closes modal when clicking outside
+- **Body scroll lock** - Prevents scrolling background content
+- **Keyboard navigation** - Full keyboard support for buttons
+- **Loading states** - Buttons disabled during async operations
+
+## Styling Details
+
+- **Backdrop** - Black overlay at 50% opacity with backdrop blur
+- **Rounded corners** - `rounded-2xl` (16px border radius)
+- **Shadow** - `shadow-xl` for depth
+- **Z-index** - `z-50` to appear above other content
+- **Animations** - Smooth fade and zoom entrance
+- **Border** - Separator between header and content when header is present

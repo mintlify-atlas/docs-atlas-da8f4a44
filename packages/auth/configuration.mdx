@@ -1,0 +1,227 @@
+---
+title: Configuration
+description: Configure authentication adapters and TypeScript types
+---
+
+The auth package uses an **adapter pattern** to integrate with any authentication provider. This page covers how to configure adapters and use TypeScript types.
+
+## Auth Adapter
+
+The `AuthAdapter` type defines the interface your authentication provider must implement:
+
+```typescript
+export type AuthAdapter = {
+  signIn: (data: Record<string, any>) => Promise<void>;
+  signUp?: (data: Record<string, any>) => Promise<void>;
+  signOut?: () => Promise<void>;
+  getSession?: () => Promise<Record<string, any> | null>;
+};
+```
+
+### Required Methods
+
+#### `signIn`
+
+Handles user authentication. Receives form data and should authenticate the user.
+
+```typescript
+signIn: async (data: Record<string, any>) => {
+  const { email, password } = data;
+  await yourAuthProvider.signIn(email, password);
+}
+```
+
+### Optional Methods
+
+#### `signUp`
+
+Handles user registration. If not provided, the `RegisterForm` component can still be used, but you'll need to handle registration separately.
+
+```typescript
+signUp: async (data: Record<string, any>) => {
+  const { email, password } = data;
+  await yourAuthProvider.signUp(email, password);
+}
+```
+
+#### `signOut`
+
+Handles user sign-out. If not provided, the `signOut` method from `useAuth` will be a no-op.
+
+```typescript
+signOut: async () => {
+  await yourAuthProvider.signOut();
+}
+```
+
+#### `getSession`
+
+Retrieves the current user session. Not currently used by the package, but available for future features.
+
+```typescript
+getSession: async () => {
+  return await yourAuthProvider.getSession();
+}
+```
+
+## TypeScript Types
+
+### `UseAuthOptions`
+
+Options for the `useAuth` hook:
+
+```typescript
+export type UseAuthOptions = {
+  adapter?: AuthAdapter;
+};
+```
+
+**Usage:**
+
+```typescript
+import { useAuth } from '@repo/auth';
+import type { UseAuthOptions } from '@repo/auth';
+
+const options: UseAuthOptions = {
+  adapter: myAuthAdapter,
+};
+
+const auth = useAuth(options);
+```
+
+## Example Adapters
+
+### Better Auth Adapter
+
+```typescript
+import { authClient } from './auth-client';
+import type { AuthAdapter } from '@repo/auth';
+
+export const betterAuthAdapter: AuthAdapter = {
+  signIn: async (data) => {
+    const { email, password } = data;
+    await authClient.signIn.email(
+      { email, password },
+      { onSuccess: () => window.location.href = '/dashboard' }
+    );
+  },
+  signUp: async (data) => {
+    const { email, password } = data;
+    await authClient.signUp.email(
+      { email, password },
+      { onSuccess: () => window.location.href = '/dashboard' }
+    );
+  },
+  signOut: async () => {
+    await authClient.signOut();
+  },
+};
+```
+
+### NextAuth Adapter
+
+```typescript
+import { signIn, signOut, signUp } from 'next-auth/react';
+import type { AuthAdapter } from '@repo/auth';
+
+export const nextAuthAdapter: AuthAdapter = {
+  signIn: async (data) => {
+    const result = await signIn('credentials', {
+      email: data.email,
+      password: data.password,
+      redirect: false,
+    });
+    
+    if (result?.error) {
+      throw new Error(result.error);
+    }
+  },
+  signUp: async (data) => {
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Registration failed');
+    }
+  },
+  signOut: async () => {
+    await signOut({ redirect: false });
+  },
+};
+```
+
+### Supabase Adapter
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+import type { AuthAdapter } from '@repo/auth';
+
+const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!);
+
+export const supabaseAdapter: AuthAdapter = {
+  signIn: async (data) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+    
+    if (error) throw error;
+  },
+  signUp: async (data) => {
+    const { error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+    });
+    
+    if (error) throw error;
+  },
+  signOut: async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  },
+};
+```
+
+<Tip>
+  Create your adapter in a separate file (e.g., `auth-adapter.ts`) so you can reuse it across your application.
+</Tip>
+
+## Enhanced Error Handling
+
+The `useAuth` hook automatically enhances error messages to be more user-friendly. It converts technical errors into readable messages:
+
+| Original Error | Enhanced Message |
+|----------------|------------------|
+| `CSRF token missing` | Session expired. Please refresh the page and try again. |
+| `Failed to fetch` | Unable to connect. Please check your internet connection. |
+| `Request timeout` | Request timed out. Please try again. |
+| `CORS error` | Connection blocked. Please contact support. |
+
+<Note>
+  You can still access the original error message if needed, but users will see the enhanced version.
+</Note>
+
+## Environment Variables
+
+While the auth package itself doesn't require environment variables, your adapter likely will. Common patterns:
+
+```bash
+# Better Auth
+BETTER_AUTH_SECRET=your-secret-key
+BETTER_AUTH_URL=http://localhost:3000
+
+# NextAuth
+NEXTAUTH_SECRET=your-secret-key
+NEXTAUTH_URL=http://localhost:3000
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+<Tip>
+  Always prefix client-side environment variables with `NEXT_PUBLIC_` in Next.js applications.
+</Tip>

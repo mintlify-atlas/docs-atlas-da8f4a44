@@ -1,0 +1,405 @@
+---
+title: Spacing
+description: Consistent spacing scale based on 4px/8px grid system
+---
+
+The SecureVault Design System uses a consistent spacing scale based on Tailwind's default spacing system, built on a **4px/8px grid** for harmonious layouts.
+
+## Spacing Scale
+
+The system uses Tailwind's spacing scale where each unit equals **0.25rem (4px)**:
+
+<CardGroup cols={2}>
+  <Card title="gap-1 / space-y-1" icon="ruler">
+    **4px** - Minimal spacing, icon-to-text gaps
+  </Card>
+  <Card title="gap-2 / space-y-2" icon="ruler">
+    **8px** - Tight grouping, form fields
+  </Card>
+  <Card title="gap-4 / space-y-4" icon="ruler">
+    **16px** - Related items, card content
+  </Card>
+  <Card title="gap-6 / space-y-6" icon="ruler">
+    **24px** - Section padding, form groups
+  </Card>
+  <Card title="gap-8 / space-y-8" icon="ruler">
+    **32px** - Major sections, page sections
+  </Card>
+  <Card title="gap-12 / space-y-12" icon="ruler">
+    **48px** - Large section breaks
+  </Card>
+</CardGroup>
+
+## Common Patterns
+
+### Tight Grouping (gap-2)
+
+Use for closely related elements:
+
+```tsx
+// Icon with label
+<div className="flex items-center gap-2">
+  <Icon className="h-4 w-4" />
+  <span>Settings</span>
+</div>
+
+// Form field group
+<div className="space-y-2">
+  <label>Email</label>
+  <Input type="email" />
+</div>
+```
+
+### Related Items (gap-4)
+
+Use for form fields, card content, and list items:
+
+```tsx
+// Form with multiple fields
+<form className="space-y-4">
+  <Input label="Name" />
+  <Input label="Email" />
+  <Button type="submit">Submit</Button>
+</form>
+
+// Card content
+<div className="p-5 space-y-4 bg-card rounded-3xl">
+  <h3>Card Title</h3>
+  <p>Card description</p>
+  <Button>Action</Button>
+</div>
+```
+
+### Section Padding (gap-6)
+
+Use for padding inside containers:
+
+```tsx
+// Modal content
+<div className="bg-card rounded-2xl p-6 space-y-6">
+  <h2>Modal Title</h2>
+  <p>Modal content</p>
+  <div className="flex gap-3">
+    <Button>Cancel</Button>
+    <Button>Confirm</Button>
+  </div>
+</div>
+
+// Dashboard section
+<section className="space-y-6">
+  <h2>Dashboard</h2>
+  <div className="grid gap-4">
+    {/* Cards */}
+  </div>
+</section>
+```
+
+### Major Sections (gap-8)
+
+Use for page sections and large content blocks:
+
+```tsx
+// Page layout
+<div className="space-y-8 max-w-7xl mx-auto">
+  {/* Header */}
+  <header className="space-y-4">
+    <h1>Page Title</h1>
+    <p>Description</p>
+  </header>
+  
+  {/* Content */}
+  <main className="space-y-8">
+    <section>Section 1</section>
+    <section>Section 2</section>
+  </main>
+</div>
+```
+
+## Padding
+
+### Component Padding
+
+| Component | Padding | Usage |
+|-----------|---------|-------|
+| Small button | `px-3` | Compact UI elements |
+| Default button | `px-4` - `px-6` | Standard buttons |
+| Input | `px-3` | Form inputs |
+| Card | `p-5` - `p-6` | Card containers |
+| Modal | `p-6` - `p-8` | Dialogs and modals |
+| Auth page | `p-8` - `p-10` | Auth forms |
+
+### Examples
+
+```tsx
+// Small button
+<Button size="sm" className="px-3 h-8">
+  Save
+</Button>
+
+// Default button
+<Button className="px-6 h-11">
+  Submit
+</Button>
+
+// Card padding
+<div className="p-5 bg-card rounded-3xl">
+  Card content
+</div>
+
+// Modal padding
+<div className="p-6 bg-card rounded-2xl">
+  Modal content
+</div>
+
+// Auth page
+<div className="p-8 sm:p-10 bg-card rounded-2xl max-w-md">
+  <h2>Sign In</h2>
+  <LoginForm />
+</div>
+```
+
+## Margin
+
+### Vertical Spacing (space-y)
+
+Use for stacking elements vertically:
+
+```tsx
+// Tight spacing (8px)
+<div className="space-y-2">
+  <p>Item 1</p>
+  <p>Item 2</p>
+</div>
+
+// Default spacing (16px)
+<div className="space-y-4">
+  <section>Section 1</section>
+  <section>Section 2</section>
+</div>
+
+// Generous spacing (32px)
+<div className="space-y-8">
+  <article>Article 1</article>
+  <article>Article 2</article>
+</div>
+```
+
+### Horizontal Spacing (space-x)
+
+Use for inline elements:
+
+```tsx
+// Button group
+<div className="flex space-x-3">
+  <Button variant="outline">Cancel</Button>
+  <Button>Confirm</Button>
+</div>
+
+// Icon list
+<div className="flex space-x-2">
+  <Icon />
+  <Icon />
+  <Icon />
+</div>
+```
+
+## Gap (Flexbox & Grid)
+
+Prefer `gap` over `space-x`/`space-y` for modern layouts:
+
+```tsx
+// Flexbox with gap
+<div className="flex gap-4">
+  <div>Item 1</div>
+  <div>Item 2</div>
+</div>
+
+// Grid with gap
+<div className="grid grid-cols-2 gap-4">
+  <Card>Card 1</Card>
+  <Card>Card 2</Card>
+</div>
+
+// Responsive grid
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  <Card />
+  <Card />
+  <Card />
+</div>
+```
+
+<Tip>
+  Use `gap` instead of `space-x`/`space-y` when possible. It's more flexible and works better with responsive layouts.
+</Tip>
+
+## Layout Patterns
+
+### Dashboard Page
+
+```tsx
+<div className="space-y-8 max-w-7xl mx-auto p-6">
+  {/* Header */}
+  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+      <p className="text-muted-foreground text-lg">Welcome back!</p>
+    </div>
+    <Button>New Item</Button>
+  </div>
+
+  {/* Stats Grid */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <StatCard />
+    <StatCard />
+    <StatCard />
+    <StatCard />
+  </div>
+
+  {/* Content */}
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="lg:col-span-2">
+      <Card />
+    </div>
+    <div>
+      <Card />
+    </div>
+  </div>
+</div>
+```
+
+### Auth Page
+
+```tsx
+<div className="min-h-screen flex items-center justify-center px-4">
+  <div className="bg-card rounded-2xl shadow-lg p-8 sm:p-10 max-w-md w-full space-y-8">
+    {/* Header */}
+    <div className="space-y-2">
+      <h2 className="text-3xl font-bold">Welcome back</h2>
+      <p className="text-muted-foreground text-lg">Sign in to continue</p>
+    </div>
+
+    {/* Form */}
+    <form className="space-y-4">
+      <Input label="Email" />
+      <PasswordInput label="Password" />
+      <Button className="w-full">Sign in</Button>
+    </form>
+
+    {/* Footer */}
+    <p className="text-center text-sm text-muted-foreground">
+      Don't have an account?{' '}
+      <a href="/register" className="text-primary">Sign up</a>
+    </p>
+  </div>
+</div>
+```
+
+### Card Layout
+
+```tsx
+<div className="p-5 bg-card rounded-3xl border shadow-sm space-y-4">
+  {/* Header */}
+  <div className="flex items-center justify-between">
+    <h3 className="text-lg font-semibold">Card Title</h3>
+    <Button variant="ghost" size="icon">
+      <MoreHorizontal className="h-4 w-4" />
+    </Button>
+  </div>
+
+  {/* Content */}
+  <p className="text-muted-foreground">
+    Card description goes here
+  </p>
+
+  {/* Footer */}
+  <div className="flex gap-3">
+    <Button variant="outline">Cancel</Button>
+    <Button>Confirm</Button>
+  </div>
+</div>
+```
+
+## Responsive Spacing
+
+Adjust spacing for different screen sizes:
+
+```tsx
+// Responsive padding
+<div className="p-4 md:p-6 lg:p-8">
+  Content with responsive padding
+</div>
+
+// Responsive gap
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+  <Card />
+  <Card />
+</div>
+
+// Responsive spacing
+<div className="space-y-4 md:space-y-6 lg:space-y-8">
+  <section>Section 1</section>
+  <section>Section 2</section>
+</div>
+```
+
+## Container Spacing
+
+### Page Container
+
+```tsx
+// Standard page container
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  Page content
+</div>
+
+// Full-width with padding
+<div className="w-full px-4 py-6">
+  Full-width content
+</div>
+```
+
+### Centered Container
+
+```tsx
+// Auth pages, error pages
+<div className="min-h-screen flex items-center justify-center px-4">
+  <div className="max-w-md w-full">
+    Centered content
+  </div>
+</div>
+```
+
+## Divider Spacing
+
+```tsx
+// With margin
+<div>
+  <section>Content 1</section>
+  <div className="border-t border-border my-8" />
+  <section>Content 2</section>
+</div>
+
+// In lists
+<div className="divide-y divide-border">
+  <div className="py-4">Item 1</div>
+  <div className="py-4">Item 2</div>
+  <div className="py-4">Item 3</div>
+</div>
+```
+
+## Quick Reference
+
+| Use Case | Spacing Class | Size |
+|----------|--------------|------|
+| Icon-text gap | `gap-1` or `gap-2` | 4-8px |
+| Form fields | `space-y-4` | 16px |
+| Button group | `gap-3` | 12px |
+| Card content | `p-5` or `p-6` | 20-24px |
+| Section spacing | `space-y-6` or `space-y-8` | 24-32px |
+| Grid items | `gap-4` | 16px |
+| Page padding | `p-6` | 24px |
+| Modal padding | `p-6` or `p-8` | 24-32px |
+
+<Note>
+  Always use multiples of 4px (gap-1, gap-2, gap-4, etc.) to maintain consistency with the 4px/8px grid system.
+</Note>

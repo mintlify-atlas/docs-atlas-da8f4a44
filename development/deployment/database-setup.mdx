@@ -1,0 +1,509 @@
+---
+title: Database Setup
+description: Configure MongoDB for the Money monorepo applications
+---
+
+## Overview
+
+The Money monorepo uses MongoDB as its primary database for the Secure and CashGap applications. This guide covers setting up MongoDB for development and production environments.
+
+## Database Requirements
+
+<CardGroup cols={2}>
+  <Card title="MongoDB Version" icon="database">
+    MongoDB 4.4 or higher
+  </Card>
+  <Card title="Connection Method" icon="plug">
+    MongoDB URI connection string
+  </Card>
+  <Card title="ORM/ODM" icon="layer-group">
+    Mongoose for schema and queries
+  </Card>
+  <Card title="Authentication" icon="shield">
+    Username/password authentication
+  </Card>
+</CardGroup>
+
+## Applications Using MongoDB
+
+### Secure App
+
+Stores:
+- User accounts and profiles
+- Authentication sessions
+- Password vault entries
+- Encryption keys and metadata
+- OAuth account links
+- Email verification tokens
+
+### CashGap App
+
+Stores:
+- User accounts and profiles
+- Transaction records
+- Financial data
+- Authentication sessions
+- User preferences
+
+<Warning>
+  The Secure app stores sensitive encrypted data. Ensure your database has appropriate security measures, backups, and access controls.
+</Warning>
+
+## Development Setup
+
+### Option 1: Local MongoDB
+
+<Steps>
+  <Step title="Install MongoDB">
+    Choose your installation method:
+
+    <CodeGroup>
+      ```bash macOS (Homebrew)
+      brew tap mongodb/brew
+      brew install mongodb-community
+      brew services start mongodb-community
+      ```
+
+      ```bash Ubuntu/Debian
+      wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo apt-key add -
+      echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+      sudo apt-get update
+      sudo apt-get install -y mongodb-org
+      sudo systemctl start mongod
+      ```
+
+      ```bash Docker
+      docker run -d \
+        --name mongodb \
+        -p 27017:27017 \
+        -v mongodb_data:/data/db \
+        mongo:latest
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Verify installation">
+    Check that MongoDB is running:
+
+    ```bash
+    # Connect to MongoDB
+    mongosh
+
+    # Or check the process
+    ps aux | grep mongod
+    ```
+  </Step>
+
+  <Step title="Configure connection string">
+    Add to your `.env` file:
+
+    ```bash
+    MONGODB_URI=mongodb://localhost:27017/money-dev
+    ```
+
+    For separate databases per app:
+    ```bash
+    # In apps/secure/.env
+    MONGODB_URI=mongodb://localhost:27017/secure-dev
+
+    # In apps/cashgap/.env
+    MONGODB_URI=mongodb://localhost:27017/cashgap-dev
+    ```
+  </Step>
+
+  <Step title="Test connection">
+    Start your app and verify database connectivity:
+
+    ```bash
+    pnpm dev --filter=secure
+    ```
+
+    Check logs for successful database connection.
+  </Step>
+</Steps>
+
+### Option 2: MongoDB Atlas (Cloud)
+
+Recommended for teams and production-like development environments.
+
+<Steps>
+  <Step title="Create MongoDB Atlas account">
+    Sign up at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register)
+  </Step>
+
+  <Step title="Create a cluster">
+    1. Click "Build a Database"
+    2. Choose "Shared" (free tier)
+    3. Select your cloud provider and region
+    4. Name your cluster
+    5. Click "Create Cluster"
+  </Step>
+
+  <Step title="Configure database access">
+    1. Go to "Database Access"
+    2. Click "Add New Database User"
+    3. Create username and strong password
+    4. Grant "Read and write to any database" permission
+    5. Click "Add User"
+  </Step>
+
+  <Step title="Configure network access">
+    1. Go to "Network Access"
+    2. Click "Add IP Address"
+    3. For development: Click "Allow Access from Anywhere" (0.0.0.0/0)
+    4. For production: Add specific IP addresses
+    5. Click "Confirm"
+  </Step>
+
+  <Step title="Get connection string">
+    1. Click "Connect" on your cluster
+    2. Choose "Connect your application"
+    3. Copy the connection string
+    4. Replace `<password>` with your database password
+    5. Replace `<database>` with your database name (e.g., `money-dev`)
+  </Step>
+
+  <Step title="Add to environment variables">
+    ```bash
+    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/money-dev?retryWrites=true&w=majority
+    ```
+  </Step>
+</Steps>
+
+## Production Setup
+
+### MongoDB Atlas (Recommended)
+
+<Steps>
+  <Step title="Create production cluster">
+    Create a separate cluster for production:
+    
+    - Use a dedicated cluster (M10+) for better performance
+    - Choose a region close to your deployment
+    - Enable backups (automatic on paid tiers)
+    - Consider multi-region deployment for high availability
+  </Step>
+
+  <Step title="Security configuration">
+    1. **Database users**: Create dedicated user for production with minimal required permissions
+    2. **Network access**: Whitelist only your production server IPs
+    3. **Encryption**: Enable encryption at rest (available on paid tiers)
+    4. **TLS/SSL**: Always enabled by default on Atlas
+  </Step>
+
+  <Step title="Performance optimization">
+    1. **Indexes**: Create indexes on frequently queried fields
+    2. **Connection pooling**: Configure appropriate pool size
+    3. **Read preference**: Use appropriate read preference for your use case
+    4. **Monitoring**: Enable MongoDB Atlas monitoring and alerts
+  </Step>
+
+  <Step title="Backup strategy">
+    1. Enable continuous backups (available on M10+)
+    2. Configure backup retention policy
+    3. Test restore procedures
+    4. Consider point-in-time recovery
+  </Step>
+
+  <Step title="Configure connection string">
+    Add to production environment variables:
+
+    ```bash
+    MONGODB_URI=mongodb+srv://prod-user:strong-password@prod-cluster.mongodb.net/money-prod?retryWrites=true&w=majority&maxPoolSize=10
+    ```
+  </Step>
+</Steps>
+
+### Self-Hosted MongoDB
+
+For self-hosted deployments:
+
+<Steps>
+  <Step title="Install MongoDB on server">
+    Follow MongoDB installation guides for your OS/platform
+  </Step>
+
+  <Step title="Enable authentication">
+    ```bash
+    # Create admin user
+    mongosh
+    use admin
+    db.createUser({
+      user: "admin",
+      pwd: "strong-password",
+      roles: [{ role: "userAdminAnyDatabase", db: "admin" }]
+    })
+    ```
+
+    Enable authentication in `mongod.conf`:
+    ```yaml
+    security:
+      authorization: enabled
+    ```
+  </Step>
+
+  <Step title="Configure firewall">
+    ```bash
+    # Allow MongoDB port only from app servers
+    sudo ufw allow from <app-server-ip> to any port 27017
+    ```
+  </Step>
+
+  <Step title="Enable TLS/SSL">
+    Configure TLS in `mongod.conf`:
+    ```yaml
+    net:
+      tls:
+        mode: requireTLS
+        certificateKeyFile: /path/to/mongodb.pem
+    ```
+  </Step>
+
+  <Step title="Setup replication (recommended)">
+    Configure a replica set for high availability:
+    ```bash
+    mongosh
+    rs.initiate({
+      _id: "rs0",
+      members: [
+        { _id: 0, host: "mongo1:27017" },
+        { _id: 1, host: "mongo2:27017" },
+        { _id: 2, host: "mongo3:27017" }
+      ]
+    })
+    ```
+  </Step>
+</Steps>
+
+## Database Schema
+
+The applications use Mongoose for schema definition and queries:
+
+### Connection Management
+
+Connections are managed per-app:
+
+```typescript
+// apps/secure/src/lib/db/connection.ts
+import mongoose from 'mongoose';
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error('Please define MONGODB_URI environment variable');
+}
+
+export async function connectToDatabase() {
+  if (mongoose.connection.readyState >= 1) {
+    return;
+  }
+
+  return mongoose.connect(MONGODB_URI);
+}
+```
+
+### Mongoose Models
+
+Models are defined in each app's `models` directory:
+
+- User models
+- Session models
+- App-specific data models
+
+## Database Operations
+
+### Clearing Development Database
+
+A utility script is available to clear development databases:
+
+```bash
+# Clear all development data
+pnpm tsx scripts/clear-databases.ts
+```
+
+<Warning>
+  This script is for development only and will delete all data. Never run in production!
+</Warning>
+
+### Database Migrations
+
+Currently, the project does not use formal migrations. Schema changes are handled by:
+
+1. Updating Mongoose models
+2. Deploying code changes
+3. Running manual migration scripts if needed
+
+Consider adding a migration tool like:
+- [migrate-mongo](https://github.com/seppevs/migrate-mongo)
+- [mongodb-migrations](https://github.com/mycodeself/mongodb-migrations)
+
+### Seeding Data
+
+For development, you can seed test data:
+
+```typescript
+// Example seed script
+import { connectToDatabase } from './lib/db';
+import { User } from './models/User';
+
+async function seed() {
+  await connectToDatabase();
+  
+  await User.create({
+    email: 'test@example.com',
+    name: 'Test User',
+    // ... other fields
+  });
+  
+  console.log('Seed completed');
+}
+
+seed();
+```
+
+## Performance Optimization
+
+### Indexing
+
+Create indexes on frequently queried fields:
+
+```typescript
+// In Mongoose model
+const UserSchema = new Schema({
+  email: { type: String, required: true, unique: true, index: true },
+  createdAt: { type: Date, default: Date.now, index: true }
+});
+```
+
+### Connection Pooling
+
+Configure connection pool size in URI:
+
+```bash
+MONGODB_URI=mongodb+srv://...?maxPoolSize=10&minPoolSize=5
+```
+
+### Query Optimization
+
+- Use `lean()` for read-only queries
+- Select only needed fields
+- Use pagination for large result sets
+- Avoid N+1 queries with `populate()`
+
+## Monitoring
+
+### MongoDB Atlas Monitoring
+
+Atlas provides built-in monitoring:
+- Real-time metrics
+- Query performance insights
+- Index recommendations
+- Alerts for issues
+
+### Application-Level Monitoring
+
+Log database operations:
+
+```typescript
+mongoose.set('debug', process.env.NODE_ENV === 'development');
+```
+
+## Backup and Recovery
+
+### MongoDB Atlas Backups
+
+- Continuous backups on M10+ clusters
+- Point-in-time recovery
+- Automated snapshots
+- Download backup archives
+
+### Manual Backup
+
+```bash
+# Export database
+mongodump --uri="mongodb://localhost:27017/money-dev" --out=./backup
+
+# Restore database
+mongorestore --uri="mongodb://localhost:27017/money-dev" ./backup
+```
+
+### Backup Strategy Recommendations
+
+1. **Automated daily backups**
+2. **Retain backups for 30 days minimum**
+3. **Test restore procedures monthly**
+4. **Store backups in separate location**
+5. **Encrypt backup files**
+
+## Troubleshooting
+
+### Connection Refused
+
+```bash
+# Check if MongoDB is running
+sudo systemctl status mongod
+
+# Check logs
+sudo journalctl -u mongod
+
+# Verify port is open
+sudo netstat -tlnp | grep 27017
+```
+
+### Authentication Failed
+
+1. Verify username and password are correct
+2. Check user has permissions on target database
+3. Ensure authentication is enabled in MongoDB config
+4. Verify connection string format
+
+### Slow Queries
+
+1. Enable query profiling:
+   ```javascript
+   db.setProfilingLevel(2)
+   ```
+2. Check for missing indexes
+3. Use `explain()` to analyze queries
+4. Review MongoDB Atlas Performance Advisor
+
+### Connection Pool Exhausted
+
+1. Increase `maxPoolSize` in connection string
+2. Check for connection leaks in code
+3. Ensure connections are properly closed
+4. Monitor connection usage
+
+## Security Best Practices
+
+<Warning>
+  Always follow these security practices for production databases:
+</Warning>
+
+1. **Enable authentication**: Never run without authentication
+2. **Use strong passwords**: Generate random passwords
+3. **Restrict network access**: Whitelist specific IPs only
+4. **Enable TLS/SSL**: Encrypt data in transit
+5. **Encrypt at rest**: Enable encryption for stored data
+6. **Regular updates**: Keep MongoDB updated
+7. **Audit logs**: Enable and monitor audit logs
+8. **Least privilege**: Grant minimum required permissions
+9. **Separate environments**: Use different databases for dev/staging/prod
+10. **Regular backups**: Maintain backup schedule
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="key" href="/development/deployment/environment-variables">
+    Configure database connection strings
+  </Card>
+  <Card title="Deployment Overview" icon="rocket" href="/development/deployment/overview">
+    Deploy with database configuration
+  </Card>
+  <Card title="Running Locally" icon="play" href="/development/running-locally">
+    Start development with database
+  </Card>
+  <Card title="Setup Guide" icon="gear" href="/development/setup">
+    Complete development setup
+  </Card>
+</CardGroup>

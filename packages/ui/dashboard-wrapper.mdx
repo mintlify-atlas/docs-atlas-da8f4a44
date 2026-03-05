@@ -1,0 +1,436 @@
+---
+title: Dashboard Layout Components
+description: Reusable layout components for building consistent dashboard pages with sidebars, headers, and content areas
+---
+
+## Overview
+
+The dashboard layout components provide pre-built, polished layouts for building dashboard pages with:
+- Responsive width constraints
+- Sidebar integration
+- Sticky headers with backdrop blur
+- Consistent spacing and styling
+- Page header components
+
+## DashboardWrapper
+
+A simple wrapper component that provides responsive width constraints across all viewport sizes.
+
+### Usage
+
+```tsx
+import { DashboardWrapper } from "@repo/ui";
+
+function DashboardPage() {
+  return (
+    <DashboardWrapper>
+      <h1>My Dashboard</h1>
+      <p>Content here</p>
+    </DashboardWrapper>
+  );
+}
+```
+
+### Props
+
+<ParamField path="children" type="ReactNode" required>
+  The content to wrap.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Additional CSS classes to apply.
+</ParamField>
+
+### Responsive Widths
+
+The wrapper applies different max-widths at different breakpoints:
+
+- **Mobile** - Full width with px-4 padding
+- **sm** - max-w-2xl (672px) with px-6
+- **md** - max-w-4xl (896px)
+- **lg** - max-w-5xl (1024px)
+- **xl** - max-w-6xl (1152px)
+- **2xl** - max-w-7xl (1280px)
+
+## DashboardLayout
+
+A complete dashboard layout with sidebar, header, and content area.
+
+### Basic Usage
+
+```tsx
+import { 
+  DashboardLayout,
+  Sidebar,
+  SidebarContent,
+  // ... other sidebar components
+} from "@repo/ui";
+
+function AppSidebar() {
+  return (
+    <Sidebar>
+      <SidebarContent>
+        {/* Your sidebar content */}
+      </SidebarContent>
+    </Sidebar>
+  );
+}
+
+function App() {
+  return (
+    <DashboardLayout
+      sidebar={<AppSidebar />}
+      headerContent={<Breadcrumb />}
+    >
+      {/* Your page content */}
+    </DashboardLayout>
+  );
+}
+```
+
+### Props
+
+<ParamField path="sidebar" type="ReactNode" required>
+  The sidebar component to render (typically a `Sidebar` component).
+</ParamField>
+
+<ParamField path="children" type="ReactNode" required>
+  The main content of the dashboard.
+</ParamField>
+
+<ParamField path="headerContent" type="ReactNode">
+  Optional content to display in the header (e.g., breadcrumbs, title).
+</ParamField>
+
+<ParamField path="mainClassName" type="string">
+  Additional CSS classes for the main content area.
+</ParamField>
+
+<ParamField path="headerClassName" type="string">
+  Additional CSS classes for the header.
+</ParamField>
+
+<ParamField path="showHeaderSeparator" type="boolean" default="true">
+  Whether to show a separator between the sidebar trigger and header content.
+</ParamField>
+
+<ParamField path="defaultOpen" type="boolean" default="true">
+  Default open state of the sidebar.
+</ParamField>
+
+### Features
+
+<Tabs>
+  <Tab title="Header">
+    The header includes:
+    - Sidebar trigger button
+    - Optional separator
+    - Custom header content
+    - Height: 64px (h-16)
+    - Responsive height adjustment when sidebar is collapsed
+    
+    ```tsx
+    <DashboardLayout
+      sidebar={<AppSidebar />}
+      headerContent={
+        <div className="flex items-center gap-2">
+          <h1>Dashboard</h1>
+        </div>
+      }
+    >
+      Content
+    </DashboardLayout>
+    ```
+  </Tab>
+  
+  <Tab title="Scrollable Content">
+    The main content area is:
+    - Full height with overflow-y-auto
+    - Padded (p-6)
+    - Scrollable independently from header
+    
+    ```tsx
+    <DashboardLayout sidebar={<AppSidebar />}>
+      <div className="space-y-6">
+        {/* Long content that scrolls */}
+      </div>
+    </DashboardLayout>
+    ```
+  </Tab>
+  
+  <Tab title="Sidebar Integration">
+    Automatically wraps content in:
+    - `SidebarProvider` for state management
+    - `SidebarInset` for proper layout
+    - Full height layout
+    
+    ```tsx
+    <DashboardLayout
+      sidebar={<AppSidebar />}
+      defaultOpen={false}
+    >
+      Content
+    </DashboardLayout>
+    ```
+  </Tab>
+</Tabs>
+
+## DashboardPageHeader
+
+A consistent page header component for dashboard pages with title, description, and actions.
+
+### Usage
+
+```tsx
+import { DashboardPageHeader } from "@repo/ui";
+
+function UsersPage() {
+  return (
+    <>
+      <DashboardPageHeader
+        title="Users"
+        description="Manage your team members and their permissions"
+        actions={
+          <button>Add User</button>
+        }
+      />
+      
+      {/* Page content */}
+    </>
+  );
+}
+```
+
+### Props
+
+<ParamField path="title" type="string" required>
+  The page title.
+</ParamField>
+
+<ParamField path="description" type="string">
+  Optional description below the title.
+</ParamField>
+
+<ParamField path="actions" type="ReactNode">
+  Optional action buttons/content to display on the right.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Additional CSS classes to apply.
+</ParamField>
+
+### Layout
+
+The header uses responsive flex layout:
+- **Mobile** - Stacked vertically (flex-col)
+- **Desktop** - Horizontal with space-between (flex-row)
+- Actions have top margin on mobile, none on desktop
+- Bottom margin of mb-6 for spacing from content
+
+## DashboardContent
+
+A content wrapper that provides consistent max-width constraints.
+
+### Usage
+
+```tsx
+import { DashboardContent } from "@repo/ui";
+
+function Page() {
+  return (
+    <DashboardContent>
+      <div className="grid grid-cols-3 gap-4">
+        {/* Your content */}
+      </div>
+    </DashboardContent>
+  );
+}
+```
+
+### Props
+
+<ParamField path="children" type="ReactNode" required>
+  The content to wrap.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Additional CSS classes to apply.
+</ParamField>
+
+<ParamField path="constrained" type="boolean" default="true">
+  Whether to apply max-width constraint (max-w-7xl).
+  
+  Set to `false` for full-width content.
+</ParamField>
+
+### Example: Full Width
+
+```tsx
+<DashboardContent constrained={false}>
+  {/* Full width content */}
+  <div className="w-full">...</div>
+</DashboardContent>
+```
+
+## Complete Example
+
+```tsx
+import {
+  DashboardLayout,
+  DashboardPageHeader,
+  DashboardContent,
+  Sidebar,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@repo/ui";
+import { Home, Users, Settings, Plus } from "lucide-react";
+
+function AppSidebar() {
+  return (
+    <Sidebar>
+      <SidebarContent>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton isActive>
+              <Home />
+              <span>Dashboard</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton>
+              <Users />
+              <span>Users</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton>
+              <Settings />
+              <span>Settings</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
+
+function DashboardPage() {
+  return (
+    <DashboardLayout
+      sidebar={<AppSidebar />}
+      headerContent={
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Dashboard</span>
+        </div>
+      }
+    >
+      <DashboardContent>
+        <DashboardPageHeader
+          title="Dashboard"
+          description="Welcome back! Here's what's happening today."
+          actions={
+            <div className="flex gap-2">
+              <Button variant="outline">Export</Button>
+              <Button>
+                <Plus />
+                Create New
+              </Button>
+            </div>
+          }
+        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Users</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">2,543</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">$45,231</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Growth</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">23%</div>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardContent>
+    </DashboardLayout>
+  );
+}
+
+export default DashboardPage;
+```
+
+## TypeScript Types
+
+```tsx
+interface DashboardWrapperProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+interface DashboardLayoutProps {
+  sidebar: React.ReactNode;
+  children: React.ReactNode;
+  headerContent?: React.ReactNode;
+  mainClassName?: string;
+  headerClassName?: string;
+  showHeaderSeparator?: boolean;
+  defaultOpen?: boolean;
+}
+
+interface DashboardPageHeaderProps {
+  title: string;
+  description?: string;
+  actions?: React.ReactNode;
+  className?: string;
+}
+
+interface DashboardContentProps {
+  children: React.ReactNode;
+  className?: string;
+  constrained?: boolean;
+}
+```
+
+## Best Practices
+
+1. **Use DashboardLayout for full pages** - It provides sidebar integration and header management
+2. **Use DashboardPageHeader consistently** - Maintain visual consistency across pages
+3. **Use DashboardContent for width constraints** - Prevent content from being too wide on large screens
+4. **Combine with other UI components** - Works seamlessly with cards, buttons, etc.
+
+## Layout Hierarchy
+
+```
+DashboardLayout
+├── Sidebar
+│   └── SidebarContent
+└── SidebarInset
+    ├── Header (with SidebarTrigger)
+    └── Main
+        └── DashboardContent (optional)
+            ├── DashboardPageHeader (optional)
+            └── Your content
+```

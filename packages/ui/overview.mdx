@@ -1,0 +1,153 @@
+---
+title: UI Package Overview
+description: A comprehensive collection of accessible, customizable React components built with Radix UI and Tailwind CSS
+---
+
+## Introduction
+
+The `@repo/ui` package is a comprehensive UI component library that provides reusable, accessible, and beautifully designed components for building modern web applications. All components are built with:
+
+- **Radix UI** - For accessibility and unstyled primitives
+- **Tailwind CSS** - For styling and theming
+- **TypeScript** - For type safety
+- **class-variance-authority** - For component variants
+
+## Installation
+
+The package is part of the Money monorepo and can be imported in any workspace application:
+
+```tsx
+import { Button, Card, Input } from "@repo/ui";
+```
+
+## Available Components
+
+<CardGroup cols={2}>
+  <Card title="Buttons" icon="circle" href="/packages/ui/buttons">
+    Interactive button components with multiple variants and states
+  </Card>
+  <Card title="Inputs" icon="square" href="/packages/ui/inputs">
+    Form input components including text inputs and password inputs
+  </Card>
+  <Card title="Cards" icon="square" href="/packages/ui/cards">
+    Card components for displaying content in various layouts
+  </Card>
+  <Card title="Modals" icon="window" href="/packages/ui/modals">
+    Modal dialogs and confirmation dialogs
+  </Card>
+  <Card title="Sidebar" icon="sidebar" href="/packages/ui/sidebar">
+    Collapsible sidebar navigation components
+  </Card>
+  <Card title="Dashboard Wrapper" icon="layout" href="/packages/ui/dashboard-wrapper">
+    Layout components for building dashboard pages
+  </Card>
+</CardGroup>
+
+## Component Exports
+
+The package exports all components through a central index file:
+
+```tsx
+// Buttons
+export { Button, buttonVariants } from "./button";
+
+// Inputs
+export { Input, PasswordInput } from "./input";
+
+// Cards
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  LongCard,
+  MetricCard,
+  ChartCard,
+  StatCard,
+  QuickActionCard,
+} from "./card";
+
+// Modals
+export { Modal, ConfirmDialog } from "./modal";
+
+// Sidebar
+export {
+  Sidebar,
+  SidebarProvider,
+  SidebarContent,
+  SidebarTrigger,
+  useSidebar,
+  // ... and more
+} from "./sidebar";
+
+// Dashboard Layout
+export {
+  DashboardWrapper,
+  DashboardLayout,
+  DashboardPageHeader,
+  DashboardContent,
+} from "./dashboard-wrapper";
+```
+
+## Utilities
+
+The package also exports utility functions and hooks:
+
+- **`cn`** - Tailwind class name merger utility
+- **`useIsMobile`** - Hook for detecting mobile viewports
+
+```tsx
+import { cn, useIsMobile } from "@repo/ui";
+```
+
+## Design Principles
+
+### Accessibility First
+
+All components are built with accessibility in mind, using Radix UI primitives that provide:
+- Keyboard navigation
+- Screen reader support
+- ARIA attributes
+- Focus management
+
+### Customizable
+
+Every component accepts a `className` prop for easy customization:
+
+```tsx
+<Button className="custom-class">Click me</Button>
+```
+
+### Consistent API
+
+Components follow consistent patterns:
+- Props extend native HTML attributes
+- Forward refs for DOM access
+- Variant-based styling with CVA
+
+## Theming
+
+Components use CSS variables for theming, defined in `globals.css`. The theme supports:
+- Light and dark modes
+- Customizable color palettes
+- Responsive design tokens
+
+## Dependencies
+
+<ParamField path="@radix-ui/*" type="packages">
+  Radix UI primitives for accessible component foundations
+</ParamField>
+
+<ParamField path="class-variance-authority" type="package">
+  Type-safe variant management for components
+</ParamField>
+
+<ParamField path="lucide-react" type="package">
+  Icon library for UI elements
+</ParamField>
+
+<ParamField path="tailwind-merge" type="package">
+  Utility for merging Tailwind CSS classes
+</ParamField>

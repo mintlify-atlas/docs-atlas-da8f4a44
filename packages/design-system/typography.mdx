@@ -1,0 +1,357 @@
+---
+title: Typography
+description: Font system using Geist Sans with consistent sizing and hierarchy
+---
+
+The SecureVault Design System uses **Geist Sans** as its primary typeface, providing a clean, modern aesthetic with excellent readability.
+
+## Font Family
+
+### Geist Sans
+
+Geist Sans is a modern, geometric sans-serif font optimized for UI and code:
+
+```css
+--font-geist-sans: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+```
+
+**Usage in CSS:**
+
+```css
+body {
+  font-family: var(--font-geist-sans);
+}
+```
+
+**Usage in Tailwind:**
+
+```tsx
+<div className="font-sans">
+  Content using Geist Sans
+</div>
+```
+
+<Note>
+  The font-sans class is applied globally by default, so you typically don't need to specify it explicitly.
+</Note>
+
+## Font Sizes
+
+The system uses Tailwind's default font size scale with common patterns:
+
+<CardGroup cols={2}>
+  <Card title="text-3xl" icon="heading">
+    **36px** - Page titles and hero headings
+  </Card>
+  <Card title="text-2xl" icon="heading">
+    **24px** - Section headings and large stats
+  </Card>
+  <Card title="text-xl" icon="heading">
+    **20px** - Modal titles and card headings
+  </Card>
+  <Card title="text-lg" icon="text-size">
+    **18px** - Subtitles and prominent descriptions
+  </Card>
+  <Card title="text-base" icon="font">
+    **16px** - Default body text
+  </Card>
+  <Card title="text-sm" icon="font">
+    **14px** - Helper text, labels, and secondary content
+  </Card>
+</CardGroup>
+
+## Typography Scale
+
+```tsx
+// Page title
+<h1 className="text-3xl font-bold text-foreground">
+  Dashboard
+</h1>
+
+// Section heading
+<h2 className="text-2xl font-semibold text-foreground">
+  Recent Transactions
+</h2>
+
+// Modal or card title
+<h3 className="text-xl font-semibold text-foreground">
+  Delete Account
+</h3>
+
+// Subtitle or description
+<p className="text-lg text-muted-foreground">
+  Manage your account settings and preferences
+</p>
+
+// Body text (default)
+<p className="text-base text-foreground">
+  Regular paragraph text goes here
+</p>
+
+// Helper text or labels
+<span className="text-sm text-muted-foreground">
+  Last updated 2 hours ago
+</span>
+```
+
+## Font Weights
+
+Geist Sans supports multiple weights. The design system primarily uses:
+
+| Class | Weight | Usage |
+|-------|--------|-------|
+| `font-bold` | 700 | Headings, emphasis |
+| `font-semibold` | 600 | Subheadings, labels |
+| `font-medium` | 500 | Buttons, links |
+| `font-normal` | 400 | Body text (default) |
+
+### Examples
+
+```tsx
+// Bold headings
+<h1 className="text-3xl font-bold">
+  Title
+</h1>
+
+// Semibold labels
+<label className="text-sm font-semibold">
+  Email Address
+</label>
+
+// Medium buttons
+<Button className="font-medium">
+  Submit
+</Button>
+
+// Normal body text (default)
+<p className="font-normal">
+  Regular paragraph
+</p>
+```
+
+## Common Patterns
+
+### Page Header
+
+```tsx
+<div className="space-y-2">
+  <h1 className="text-3xl font-bold text-foreground">
+    Settings
+  </h1>
+  <p className="text-muted-foreground text-lg">
+    Manage your account and preferences
+  </p>
+</div>
+```
+
+### Card Title with Description
+
+```tsx
+<div className="space-y-1">
+  <h3 className="text-lg font-semibold text-foreground">
+    Security
+  </h3>
+  <p className="text-sm text-muted-foreground">
+    Manage your password and two-factor authentication
+  </p>
+</div>
+```
+
+### Stat Display
+
+```tsx
+<div>
+  <p className="text-sm text-muted-foreground">
+    Total Revenue
+  </p>
+  <p className="text-2xl font-bold text-foreground">
+    $24,500
+  </p>
+</div>
+```
+
+### Form Label
+
+```tsx
+<label className="block text-sm font-medium text-foreground mb-2">
+  Email Address
+  <span className="text-muted-foreground font-normal ml-1">(required)</span>
+</label>
+<Input type="email" />
+```
+
+## Text Colors
+
+Combine typography with semantic colors for hierarchy:
+
+```tsx
+// Primary text (high emphasis)
+<h1 className="text-foreground">Main Title</h1>
+
+// Secondary text (medium emphasis)
+<p className="text-muted-foreground">Description or subtitle</p>
+
+// Accent text (interactive elements)
+<a className="text-primary hover:underline">Learn more</a>
+
+// Error text
+<span className="text-destructive">Invalid email address</span>
+```
+
+## Line Height
+
+Tailwind's default line heights work well with Geist Sans:
+
+```tsx
+// Tight for headings
+<h1 className="text-3xl font-bold leading-tight">
+  Compact Heading
+</h1>
+
+// Normal for body text (default)
+<p className="text-base leading-normal">
+  Body text with comfortable spacing
+</p>
+
+// Relaxed for long-form content
+<article className="text-base leading-relaxed">
+  Long-form article content
+</article>
+```
+
+## Responsive Typography
+
+Use responsive modifiers for better mobile experiences:
+
+```tsx
+// Smaller on mobile, larger on desktop
+<h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">
+  Responsive Heading
+</h1>
+
+// Adjust body text for readability
+<p className="text-sm md:text-base">
+  Responsive paragraph
+</p>
+```
+
+## Text Alignment
+
+```tsx
+// Left-aligned (default)
+<p className="text-left">Left-aligned text</p>
+
+// Center-aligned
+<p className="text-center">Centered text</p>
+
+// Right-aligned
+<p className="text-right">Right-aligned text</p>
+```
+
+## Truncation and Overflow
+
+```tsx
+// Single line truncation
+<p className="truncate">
+  This text will be truncated with ellipsis if too long
+</p>
+
+// Multi-line clamp (requires plugin)
+<p className="line-clamp-2">
+  This text will show only 2 lines and truncate the rest
+</p>
+
+// Break long words
+<p className="break-words">
+  Thisisaverylongwordthatneedstowrap
+</p>
+```
+
+## Empty States
+
+```tsx
+<div className="flex flex-col items-center justify-center py-16 text-center">
+  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+    <Icon className="h-8 w-8 text-muted-foreground" />
+  </div>
+  <h3 className="text-lg font-semibold text-foreground">
+    No items found
+  </h3>
+  <p className="text-muted-foreground mt-1 mb-4 text-sm">
+    Get started by creating your first item
+  </p>
+  <Button>Create Item</Button>
+</div>
+```
+
+## Lists
+
+```tsx
+// Unordered list
+<ul className="space-y-2">
+  <li className="text-base text-foreground">
+    List item one
+  </li>
+  <li className="text-base text-foreground">
+    List item two
+  </li>
+</ul>
+
+// Ordered list
+<ol className="list-decimal list-inside space-y-2">
+  <li className="text-base text-foreground">
+    Step one
+  </li>
+  <li className="text-base text-foreground">
+    Step two
+  </li>
+</ol>
+```
+
+## Links
+
+```tsx
+// Default link
+<a href="#" className="text-primary hover:underline">
+  Learn more
+</a>
+
+// Muted link
+<a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+  Secondary link
+</a>
+
+// External link with icon
+<a href="#" className="text-primary hover:underline inline-flex items-center gap-1">
+  Visit docs
+  <ExternalLink className="h-4 w-4" />
+</a>
+```
+
+## Accessibility
+
+<Tip>
+  Always maintain sufficient color contrast between text and background. Use `text-foreground` for primary text and `text-muted-foreground` for secondary text.
+</Tip>
+
+### Best Practices
+
+1. **Semantic HTML** - Use proper heading hierarchy (`h1`, `h2`, `h3`)
+2. **Minimum font size** - Never go below `text-sm` (14px) for body text
+3. **Line length** - Keep line length between 50-75 characters for readability
+4. **Line height** - Use at least 1.5 line height for body text
+5. **Color contrast** - Ensure WCAG AA compliance (4.5:1 for normal text)
+
+## Quick Reference
+
+| Element | Classes |
+|---------|--------|
+| Page title | `text-3xl font-bold text-foreground` |
+| Section heading | `text-2xl font-semibold text-foreground` |
+| Card heading | `text-xl font-semibold text-foreground` |
+| Subtitle | `text-lg text-muted-foreground` |
+| Body text | `text-base text-foreground` |
+| Helper text | `text-sm text-muted-foreground` |
+| Label | `text-sm font-medium text-foreground` |
+| Link | `text-primary hover:underline` |
+| Error | `text-sm text-destructive` |

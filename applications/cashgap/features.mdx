@@ -1,0 +1,399 @@
+---
+title: CashGap Features
+description: Comprehensive guide to all features in the CashGap personal finance application
+---
+
+# CashGap Features
+
+CashGap provides a complete suite of financial management tools to help users take control of their money.
+
+## Dashboard Overview
+
+The dashboard is the central hub that displays all your financial data at a glance.
+
+### Financial Metrics
+
+<CardGroup cols={2}>
+  <Card title="Total Balance" icon="dollar-sign">
+    Real-time calculation of income minus expenses and subscriptions
+  </Card>
+  <Card title="Income Tracking" icon="trending-up">
+    Total income with source count and breakdown by frequency
+  </Card>
+  <Card title="Expense Summary" icon="trending-down">
+    Total expenses with item count and category breakdown
+  </Card>
+  <Card title="Active Subscriptions" icon="calendar">
+    Monthly and yearly subscription costs with renewal tracking
+  </Card>
+</CardGroup>
+
+### Dashboard Implementation
+
+The dashboard aggregates data from multiple sources:
+
+```typescript title="app/(dashboard)/dashboard/page.tsx"
+import { useDashboardData } from "@/hooks";
+
+export default function DashboardPage() {
+  const { data, isLoading } = useDashboardData();
+  const incomes = data?.incomes ?? [];
+  const expenses = data?.expenses ?? [];
+  const subscriptions = data?.subscriptions ?? [];
+
+  // Calculate totals
+  const stats = useMemo(() => {
+    const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalSubscriptions = subscriptions
+      .filter(s => s.active)
+      .reduce((sum, s) => sum + s.amount, 0);
+    const totalBalance = totalIncome - totalExpenses - totalSubscriptions;
+
+    return { totalBalance, totalIncome, totalExpenses, totalSubscriptions };
+  }, [incomes, expenses, subscriptions]);
+
+  return (
+    <DashboardWrapper>
+      {/* Display financial metrics */}
+    </DashboardWrapper>
+  );
+}
+```
+
+### Recent Transactions
+
+The dashboard displays the 5 most recent transactions combining income and expenses:
+
+```typescript
+const recentTransactions = useMemo(() => {
+  const allTransactions = [
+    ...incomes.map(i => ({
+      id: i.id,
+      name: i.name,
+      date: i.date,
+      amount: i.amount,
+      type: "income" as const,
+    })),
+    ...expenses.map(e => ({
+      id: e.id,
+      name: e.name,
+      date: e.date,
+      amount: -e.amount,
+      type: "expense" as const,
+    })),
+  ];
+
+  return allTransactions
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+}, [incomes, expenses]);
+```
+
+## Income Management
+
+### Income Features
+
+<Note>
+  Income tracking supports one-time, monthly, and yearly frequencies to accommodate various income sources like salaries, bonuses, freelance work, and investments.
+</Note>
+
+**Key Capabilities:**
+- Create income entries with name, amount, and date
+- Categorize by frequency (once, monthly, yearly)
+- Add optional notes and categories
+- Edit and delete existing entries
+- Filter by date range and category
+
+### Income Statistics
+
+The income page displays three key metrics:
+
+```typescript title="app/income/page.tsx"
+const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
+const monthlyIncome = incomes
+  .filter(i => i.frequency === "monthly")
+  .reduce((sum, i) => sum + i.amount, 0);
+const yearlyIncome = incomes
+  .filter(i => i.frequency === "yearly")
+  .reduce((sum, i) => sum + i.amount, 0);
+```
+
+## Expense Management
+
+### Expense Categories
+
+Each expense is assigned to one of eight categories:
+
+<Tabs>
+  <Tab title="Food & Dining">
+    Restaurants, groceries, coffee shops, food delivery
+    - Icon: Utensils
+    - Color: Orange
+  </Tab>
+  <Tab title="Transportation">
+    Gas, public transit, parking, car maintenance, rideshare
+    - Icon: Car
+    - Color: Blue
+  </Tab>
+  <Tab title="Shopping">
+    Clothing, electronics, home goods, gifts
+    - Icon: Shopping Bag
+    - Color: Pink
+  </Tab>
+  <Tab title="Housing">
+    Rent, mortgage, property taxes, home insurance
+    - Icon: Home
+    - Color: Purple
+  </Tab>
+  <Tab title="Utilities">
+    Electricity, water, gas, internet, phone
+    - Icon: Zap
+    - Color: Yellow
+  </Tab>
+  <Tab title="Entertainment">
+    Movies, games, hobbies, events, concerts
+    - Icon: Gamepad
+    - Color: Indigo
+  </Tab>
+  <Tab title="Health">
+    Medical, dental, pharmacy, gym, wellness
+    - Icon: Heart
+    - Color: Red
+  </Tab>
+  <Tab title="Other">
+    Miscellaneous expenses that don't fit other categories
+    - Icon: More Horizontal
+    - Color: Gray
+  </Tab>
+</Tabs>
+
+### Category Configuration
+
+```typescript title="app/expenses/page.tsx"
+const categoryConfig: Record<ExpenseCategory, {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  bg: string;
+}> = {
+  food: {
+    label: "Food & Dining",
+    icon: Utensils,
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
+  },
+  transport: {
+    label: "Transport",
+    icon: Car,
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+  },
+  // ... other categories
+};
+```
+
+### Spending Analysis
+
+The expenses page includes a category breakdown that shows:
+- Total spending per category
+- Percentage of total expenses
+- Visual progress bars
+- Color-coded category cards
+
+```typescript
+const spendingByCategory = useMemo(() => {
+  const categoryTotals: Record<string, number> = {};
+  expenses.forEach(e => {
+    categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount;
+  });
+
+  const totalSpending = Object.values(categoryTotals).reduce((sum, v) => sum + v, 0);
+
+  return Object.entries(categoryTotals)
+    .map(([category, amount]) => ({
+      category,
+      amount,
+      percentage: totalSpending > 0 ? (amount / totalSpending) * 100 : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 5);
+}, [expenses]);
+```
+
+## Subscription Tracking
+
+### Subscription Features
+
+<CardGroup cols={2}>
+  <Card title="Active/Inactive Status" icon="toggle-left">
+    Pause subscriptions without deleting them to track seasonal services
+  </Card>
+  <Card title="Billing Reminders" icon="bell">
+    Get alerts for subscriptions renewing in the next 7 days
+  </Card>
+  <Card title="Cost Calculations" icon="calculator">
+    Automatic monthly and yearly cost calculations regardless of billing frequency
+  </Card>
+  <Card title="Next Billing Date" icon="calendar">
+    Track when each subscription will charge next
+  </Card>
+</CardGroup>
+
+### Subscription Management
+
+```typescript title="app/subscriptions/page.tsx"
+// Calculate monthly total (normalize yearly to monthly)
+const monthlyTotal = activeSubscriptions.reduce((sum, s) => {
+  return sum + (s.frequency === "yearly" ? s.amount / 12 : s.amount);
+}, 0);
+const yearlyTotal = monthlyTotal * 12;
+
+// Find upcoming renewals (next 7 days)
+const today = new Date();
+const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+const upcomingRenewals = activeSubscriptions.filter(s => {
+  const billingDate = new Date(s.nextBillingDate);
+  return billingDate >= today && billingDate <= nextWeek;
+});
+```
+
+### Subscription Actions
+
+Users can perform these actions on subscriptions:
+
+<Steps>
+  <Step title="Toggle Active/Paused">
+    ```typescript
+    const handleToggle = async () => {
+      await toggleSubscriptionActive(subscription.id);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+    };
+    ```
+  </Step>
+  
+  <Step title="Edit Subscription">
+    Navigate to edit page: `/subscriptions/${id}/edit`
+  </Step>
+  
+  <Step title="Delete Subscription">
+    ```typescript
+    const handleDelete = async () => {
+      await deleteSubscription(subscription.id);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+    };
+    ```
+  </Step>
+</Steps>
+
+## User Interface Components
+
+### Collapsible Sections
+
+Dashboard sections use Radix UI's Collapsible component for better organization:
+
+```typescript
+<Collapsible open={transactionsOpen} onOpenChange={setTransactionsOpen}>
+  <CollapsibleTrigger asChild>
+    <button className="flex items-center gap-3 w-full group">
+      <div className="flex items-center gap-2">
+        <ArrowUpDown className="h-5 w-5 text-primary" />
+        <h3 className="text-lg font-semibold">Recent Transactions</h3>
+      </div>
+      <ChevronDown className={cn(
+        "h-5 w-5 transition-transform",
+        transactionsOpen && "rotate-180"
+      )} />
+    </button>
+  </CollapsibleTrigger>
+  <CollapsibleContent>
+    {/* Transaction list */}
+  </CollapsibleContent>
+</Collapsible>
+```
+
+### Dropdown Menus
+
+Contextual actions use dropdown menus:
+
+```typescript
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <button className="p-2.5 rounded-2xl hover:bg-muted">
+      <MoreVertical className="h-4 w-4" />
+    </button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuItem asChild>
+      <Link href={`/income/${income.id}/edit`}>
+        <Edit className="h-4 w-4 mr-2" />
+        Edit
+      </Link>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={handleDelete}>
+      <Trash2 className="h-4 w-4 mr-2" />
+      Delete
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+```
+
+## Data Fetching & Caching
+
+### TanStack Query Integration
+
+CashGap uses TanStack Query for efficient data fetching:
+
+```typescript title="hooks/use-finance.ts"
+export const queryKeys = {
+  dashboard: ['dashboard'],
+  incomes: ['incomes'],
+  expenses: ['expenses'],
+  subscriptions: ['subscriptions'],
+};
+
+export function useDashboardData() {
+  return useQuery({
+    queryKey: queryKeys.dashboard,
+    queryFn: async () => {
+      const response = await fetch('/api/dashboard');
+      if (!response.ok) throw new Error('Failed to fetch dashboard data');
+      return response.json();
+    },
+  });
+}
+```
+
+### Cache Invalidation
+
+After mutations, the cache is invalidated to refetch fresh data:
+
+```typescript
+await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+```
+
+## Responsive Design
+
+All pages are fully responsive with mobile-first design:
+
+- Grid layouts adjust from 1 column on mobile to 2-4 columns on desktop
+- Touch-friendly button sizes (minimum 44x44px)
+- Collapsible navigation on mobile
+- Optimized typography scales
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="lock" href="/applications/cashgap/authentication">
+    Learn about authentication implementation
+  </Card>
+  <Card title="Income Tracking" icon="trending-up" href="/applications/cashgap/income-tracking">
+    Deep dive into income tracking
+  </Card>
+  <Card title="Expense Management" icon="wallet" href="/applications/cashgap/expense-management">
+    Explore expense management details
+  </Card>
+  <Card title="Subscriptions" icon="credit-card" href="/applications/cashgap/subscriptions">
+    Manage recurring subscriptions
+  </Card>
+</CardGroup>

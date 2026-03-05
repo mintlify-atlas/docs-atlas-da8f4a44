@@ -1,0 +1,607 @@
+---
+title: Code Style Guide
+description: Code style conventions and best practices for the Money monorepo
+---
+
+## Overview
+
+The Money monorepo follows consistent code style guidelines to maintain readability and quality across all applications and packages.
+
+## Automated Formatting
+
+We use automated tools to enforce code style:
+
+- **Prettier** - Code formatting
+- **ESLint** - Code quality and patterns
+- **TypeScript** - Type safety
+
+### Format Your Code
+
+```bash
+# Format all files
+pnpm format
+
+# Check formatting without changes
+pnpm prettier --check "**/*.{ts,tsx,md}"
+
+# Lint and auto-fix
+pnpm lint -- --fix
+```
+
+<Warning>
+  Always run `pnpm format` and `pnpm lint` before committing code.
+</Warning>
+
+## TypeScript Guidelines
+
+### Use Explicit Types
+
+Always provide explicit types for function parameters and return values:
+
+```typescript
+// ✅ Good
+function calculateTotal(items: CartItem[]): number {
+  return items.reduce((sum, item) => sum + item.price, 0);
+}
+
+// ❌ Bad
+function calculateTotal(items) {
+  return items.reduce((sum, item) => sum + item.price, 0);
+}
+```
+
+### Avoid `any`
+
+Use specific types instead of `any`:
+
+```typescript
+// ✅ Good
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+  message: string;
+}
+
+function fetchUser(): Promise<ApiResponse<User>> {
+  // ...
+}
+
+// ❌ Bad
+function fetchUser(): Promise<any> {
+  // ...
+}
+```
+
+If the type is truly unknown, use `unknown`:
+
+```typescript
+// ✅ Good
+function processData(data: unknown) {
+  if (isValidData(data)) {
+    // Now TypeScript knows the type
+    return data.value;
+  }
+}
+
+function isValidData(data: unknown): data is ValidData {
+  return typeof data === 'object' && data !== null && 'value' in data;
+}
+```
+
+### Use Interfaces for Objects
+
+Prefer interfaces over type aliases for object shapes:
+
+```typescript
+// ✅ Good
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: Date;
+}
+
+// ❌ Avoid (use interfaces instead)
+type User = {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: Date;
+};
+```
+
+Use type aliases for unions, primitives, and complex types:
+
+```typescript
+// ✅ Good use of type aliases
+type Status = 'pending' | 'active' | 'inactive';
+type ID = string | number;
+type Handler = (event: Event) => void;
+```
+
+### Const Assertions
+
+Use `as const` for literal types:
+
+```typescript
+// ✅ Good
+const ROUTES = {
+  HOME: '/',
+  DASHBOARD: '/dashboard',
+  SETTINGS: '/settings',
+} as const;
+
+// ❌ Bad (types are too wide)
+const ROUTES = {
+  HOME: '/',
+  DASHBOARD: '/dashboard',
+  SETTINGS: '/settings',
+};
+```
+
+## Naming Conventions
+
+### Files and Folders
+
+```
+✅ Good naming:
+components/
+  UserProfile.tsx       # PascalCase for components
+  user-card.tsx         # kebab-case also acceptable
+utils/
+  formatDate.ts         # camelCase for utilities
+  string-helpers.ts     # kebab-case also acceptable
+hooks/
+  useAuth.ts            # camelCase starting with 'use'
+lib/
+  database.ts           # lowercase for modules
+  api-client.ts         # kebab-case acceptable
+```
+
+### Variables and Functions
+
+```typescript
+// ✅ Good - camelCase
+const userName = 'John';
+const isLoggedIn = true;
+const maxRetries = 3;
+
+function getUserById(id: string): User {
+  // ...
+}
+
+function calculateTotalPrice(items: Item[]): number {
+  // ...
+}
+
+// ❌ Bad
+const UserName = 'John';      // Should be camelCase
+const is_logged_in = true;    // No snake_case
+const MAX_RETRIES = 3;         // Use UPPER_CASE only for true constants
+```
+
+### Constants
+
+```typescript
+// ✅ Good - UPPER_SNAKE_CASE for true constants
+const MAX_FILE_SIZE = 5242880;
+const API_ENDPOINT = 'https://api.example.com';
+const DEFAULT_TIMEOUT = 30000;
+
+// ✅ Good - camelCase for const objects
+const config = {
+  apiUrl: 'https://api.example.com',
+  timeout: 30000,
+};
+```
+
+### React Components
+
+```typescript
+// ✅ Good - PascalCase
+function UserProfile({ user }: UserProfileProps) {
+  return <div>{user.name}</div>;
+}
+
+export default function DashboardPage() {
+  return <div>Dashboard</div>;
+}
+
+// ❌ Bad
+function userProfile() { }     // Should be PascalCase
+function user_profile() { }    // No snake_case
+```
+
+### Interfaces and Types
+
+```typescript
+// ✅ Good - PascalCase, no 'I' prefix
+interface User {
+  id: string;
+  name: string;
+}
+
+type UserStatus = 'active' | 'inactive';
+
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+}
+
+// ❌ Bad
+interface IUser { }            // Don't use 'I' prefix
+interface user { }             // Should be PascalCase
+type user_status = string;     // No snake_case
+```
+
+### Props Interfaces
+
+```typescript
+// ✅ Good - ComponentNameProps pattern
+interface UserCardProps {
+  user: User;
+  onEdit?: () => void;
+}
+
+function UserCard({ user, onEdit }: UserCardProps) {
+  // ...
+}
+
+// Also acceptable
+interface Props {
+  user: User;
+  onEdit?: () => void;
+}
+
+function UserCard({ user, onEdit }: Props) {
+  // ...
+}
+```
+
+## React Best Practices
+
+### Component Structure
+
+```typescript
+// ✅ Good structure
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import type { User } from '@/types';
+
+interface UserProfileProps {
+  user: User;
+  onUpdate: (user: User) => void;
+}
+
+export function UserProfile({ user, onUpdate }: UserProfileProps) {
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleSave = () => {
+    // Logic here
+    onUpdate(user);
+    setIsEditing(false);
+  };
+
+  return (
+    <div>
+      {/* JSX here */}
+    </div>
+  );
+}
+```
+
+### Hooks
+
+```typescript
+// ✅ Good custom hook
+import { useState, useEffect } from 'react';
+
+interface UseUserOptions {
+  userId: string;
+}
+
+export function useUser({ userId }: UseUserOptions) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    fetchUser(userId)
+      .then(setUser)
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, [userId]);
+
+  return { user, loading, error };
+}
+```
+
+### Event Handlers
+
+```typescript
+// ✅ Good - 'handle' prefix for component methods
+function UserForm() {
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    // Handle submission
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle change
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input onChange={handleInputChange} />
+    </form>
+  );
+}
+
+// ✅ Good - 'on' prefix for props
+interface ButtonProps {
+  onClick?: () => void;
+  onSubmit?: () => void;
+}
+```
+
+## Import Organization
+
+Organize imports in this order:
+
+```typescript
+// 1. External libraries
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+// 2. Internal modules (workspace packages)
+import { Button } from '@repo/ui';
+import { useAuth } from '@repo/auth';
+
+// 3. Relative imports - components
+import { UserCard } from '@/components/UserCard';
+import { Header } from '@/components/Header';
+
+// 4. Relative imports - utilities
+import { formatDate } from '@/lib/utils';
+import { api } from '@/lib/api';
+
+// 5. Types (use 'type' keyword)
+import type { User } from '@/types';
+import type { ApiResponse } from '@/lib/api';
+
+// 6. Styles
+import styles from './styles.module.css';
+```
+
+## Code Organization
+
+### File Length
+
+Keep files focused and manageable:
+
+- ✅ Components: < 300 lines
+- ✅ Utilities: < 200 lines
+- ✅ If larger, consider splitting into multiple files
+
+### Function Length
+
+Keep functions short and focused:
+
+- ✅ Most functions: < 50 lines
+- ✅ Complex functions: < 100 lines
+- ✅ If larger, extract helper functions
+
+### Extract Reusable Logic
+
+```typescript
+// ✅ Good - extracted helper
+function formatUserName(firstName: string, lastName: string): string {
+  return `${firstName} ${lastName}`.trim();
+}
+
+function UserProfile({ user }: UserProfileProps) {
+  return <div>{formatUserName(user.firstName, user.lastName)}</div>;
+}
+
+// ❌ Bad - duplicated logic
+function UserProfile({ user }: UserProfileProps) {
+  return <div>{`${user.firstName} ${user.lastName}`.trim()}</div>;
+}
+```
+
+## Comments and Documentation
+
+### JSDoc for Public APIs
+
+```typescript
+/**
+ * Fetches a user by their unique identifier.
+ *
+ * @param userId - The unique identifier of the user
+ * @returns A promise that resolves to the user object
+ * @throws {NotFoundError} When the user doesn't exist
+ *
+ * @example
+ * ```ts
+ * const user = await fetchUser('user-123');
+ * console.log(user.name);
+ * ```
+ */
+export async function fetchUser(userId: string): Promise<User> {
+  // Implementation
+}
+```
+
+### Inline Comments
+
+```typescript
+// ✅ Good - explains why, not what
+// Using a longer timeout here because the API can be slow during peak hours
+const API_TIMEOUT = 60000;
+
+// Calculate tax based on location (different rates per state)
+const tax = calculateTax(amount, location);
+
+// ❌ Bad - obvious from code
+// Set timeout to 60000
+const API_TIMEOUT = 60000;
+
+// Call calculateTax function
+const tax = calculateTax(amount, location);
+```
+
+### TODO Comments
+
+```typescript
+// ✅ Good - specific and actionable
+// TODO: Add caching layer for frequently accessed users
+// TODO(username): Implement pagination for large result sets
+// FIXME: This breaks when email contains special characters
+
+// ❌ Bad - vague
+// TODO: improve this
+// FIXME: doesn't work
+```
+
+## Error Handling
+
+```typescript
+// ✅ Good - specific error handling
+try {
+  const user = await fetchUser(userId);
+  return user;
+} catch (error) {
+  if (error instanceof NotFoundError) {
+    throw new Error(`User ${userId} not found`);
+  }
+  if (error instanceof NetworkError) {
+    throw new Error('Network error while fetching user');
+  }
+  // Re-throw unexpected errors
+  throw error;
+}
+
+// ❌ Bad - swallowing errors
+try {
+  const user = await fetchUser(userId);
+  return user;
+} catch (error) {
+  console.log(error);
+  return null;
+}
+```
+
+## Async/Await
+
+```typescript
+// ✅ Good - async/await
+async function loadUserData(userId: string): Promise<UserData> {
+  const user = await fetchUser(userId);
+  const posts = await fetchUserPosts(userId);
+  return { user, posts };
+}
+
+// ❌ Bad - unnecessary Promise constructor
+function loadUserData(userId: string): Promise<UserData> {
+  return new Promise((resolve, reject) => {
+    fetchUser(userId)
+      .then(user => fetchUserPosts(userId)
+        .then(posts => resolve({ user, posts }))
+      )
+      .catch(reject);
+  });
+}
+```
+
+## Avoiding Common Pitfalls
+
+### Don't Use Index as Key
+
+```typescript
+// ✅ Good - use unique identifier
+{items.map(item => (
+  <ItemCard key={item.id} item={item} />
+))}
+
+// ❌ Bad - index can cause issues
+{items.map((item, index) => (
+  <ItemCard key={index} item={item} />
+))}
+```
+
+### Optional Chaining
+
+```typescript
+// ✅ Good - safe access
+const userName = user?.profile?.name ?? 'Anonymous';
+const email = user?.email;
+
+// ❌ Bad - can throw errors
+const userName = user.profile.name || 'Anonymous';
+const email = user.email;
+```
+
+## Tailwind CSS
+
+When using Tailwind CSS:
+
+```typescript
+// ✅ Good - organized classes
+import { cn } from '@/lib/utils';
+
+<div 
+  className={cn(
+    // Layout
+    "flex items-center gap-4",
+    // Spacing
+    "p-4 mx-auto",
+    // Colors
+    "bg-white dark:bg-gray-800",
+    // Typography
+    "text-lg font-semibold",
+    // Conditional
+    isActive && "ring-2 ring-blue-500"
+  )}
+>
+
+// ❌ Bad - hard to read long string
+<div className="flex items-center gap-4 p-4 mx-auto bg-white dark:bg-gray-800 text-lg font-semibold">
+```
+
+## Testing (Future)
+
+When tests are added:
+
+```typescript
+// ✅ Good test structure
+describe('formatUserName', () => {
+  it('combines first and last name', () => {
+    expect(formatUserName('John', 'Doe')).toBe('John Doe');
+  });
+
+  it('handles empty last name', () => {
+    expect(formatUserName('John', '')).toBe('John');
+  });
+
+  it('trims whitespace', () => {
+    expect(formatUserName('John ', ' Doe')).toBe('John Doe');
+  });
+});
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Contributing Guidelines" icon="code-pull-request" href="/development/contributing/guidelines">
+    Learn how to contribute
+  </Card>
+  <Card title="Pull Requests" icon="git-pull-request" href="/development/contributing/pull-requests">
+    Submit your changes
+  </Card>
+  <Card title="Development Setup" icon="gear" href="/development/setup">
+    Set up your environment
+  </Card>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Test your code
+  </Card>
+</CardGroup>

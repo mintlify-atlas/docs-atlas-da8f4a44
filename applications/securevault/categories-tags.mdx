@@ -1,0 +1,602 @@
+---
+title: Categories & Tags
+description: Organize and manage your password vault with categories, tags, and folders
+---
+
+SecureVault provides powerful organization tools to help you manage large numbers of passwords efficiently.
+
+## Categories
+
+Categories (also called folders) provide a hierarchical way to organize passwords.
+
+### Category Structure
+
+```typescript /home/daytona/workspace/source/apps/secure/src/types/index.ts
+interface Category {
+  _id: string;
+  userId: string;
+  name: string;
+  icon: string;        // Emoji or icon name
+  color: string;       // Hex color
+  parentId?: string;   // For nested categories
+  order: number;       // Sort order
+  isDefault: boolean;  // System category
+  isLocked: boolean;   // Cannot be deleted
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### Default Categories
+
+SecureVault comes with pre-configured categories:
+
+<CardGroup cols={3}>
+  <Card title="All Items" icon="key">
+    All passwords in the vault
+  </Card>
+  <Card title="Favorites" icon="star">
+    Starred passwords for quick access
+  </Card>
+  <Card title="Finance" icon="credit-card">
+    Banks, credit cards, payment services
+  </Card>
+  <Card title="Email" icon="envelope">
+    Email accounts and services
+  </Card>
+  <Card title="Work" icon="briefcase">
+    Work-related accounts
+  </Card>
+  <Card title="Entertainment" icon="gamepad">
+    Streaming, gaming, media services
+  </Card>
+  <Card title="Shopping" icon="shopping-cart">
+    E-commerce and retail sites
+  </Card>
+  <Card title="Social" icon="users">
+    Social media platforms
+  </Card>
+  <Card title="Trash" icon="trash">
+    Deleted items (30-day retention)
+  </Card>
+</CardGroup>
+
+### Creating Categories
+
+<Steps>
+  <Step title="Define Category Data">
+    ```typescript
+    const newCategory = {
+      name: 'Development',
+      icon: '💻',
+      color: '#3b82f6',
+      parentId: undefined  // Top-level category
+    };
+    ```
+  </Step>
+  
+  <Step title="Validate with Zod">
+    ```typescript
+    import { createCategorySchema } from '@/lib/validations';
+    
+    const validated = createCategorySchema.parse(newCategory);
+    ```
+  </Step>
+  
+  <Step title="Create via API">
+    ```typescript
+    const response = await fetch('/api/categories', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify(validated)
+    });
+    
+    const category = await response.json();
+    ```
+  </Step>
+</Steps>
+
+### Using the Categories Hook
+
+```typescript
+import { useCategoriesQuery } from '@/hooks/useCategoriesQuery';
+
+function CategoriesList() {
+  const { categories, createCategory, updateCategory, deleteCategory } = useCategoriesQuery();
+  
+  const handleCreate = async () => {
+    await createCategory({
+      name: 'Healthcare',
+      icon: '🏥',
+      color: '#10b981'
+    });
+  };
+  
+  return (
+    <div>
+      {categories.map(cat => (
+        <div key={cat._id}>
+          <span>{cat.icon}</span>
+          <span>{cat.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Nested Categories
+
+Create sub-categories for better organization:
+
+```typescript
+// Parent category
+const workCategory = await createCategory({
+  name: 'Work',
+  icon: '💼',
+  color: '#6366f1'
+});
+
+// Child categories
+await createCategory({
+  name: 'AWS',
+  icon: '☁️',
+  color: '#f59e0b',
+  parentId: workCategory._id
+});
+
+await createCategory({
+  name: 'GitHub',
+  icon: '🐙',
+  color: '#8b5cf6',
+  parentId: workCategory._id
+});
+```
+
+### Category Tree Component
+
+```tsx
+function CategoryTree({ categories }: { categories: Category[] }) {
+  const tree = useMemo(() => buildCategoryTree(categories), [categories]);
+  
+  return (
+    <div className="space-y-1">
+      {tree.map(node => (
+        <CategoryNode key={node.category._id} node={node} />
+      ))}
+    </div>
+  );
+}
+
+function CategoryNode({ node }: { node: TreeNode }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const hasChildren = node.children.length > 0;
+  
+  return (
+    <div>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 w-full p-2 rounded-lg hover:bg-accent"
+      >
+        {hasChildren && (
+          <ChevronRight 
+            className={cn(
+              "h-4 w-4 transition-transform",
+              isOpen && "rotate-90"
+            )} 
+          />
+        )}
+        <span className="text-lg">{node.category.icon}</span>
+        <span className="flex-1 text-left">{node.category.name}</span>
+        <span className="text-sm text-muted-foreground">
+          {node.category.passwordCount}
+        </span>
+      </button>
+      
+      {hasChildren && isOpen && (
+        <div className="ml-6 mt-1">
+          {node.children.map(child => (
+            <CategoryNode key={child.category._id} node={child} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function buildCategoryTree(categories: Category[]): TreeNode[] {
+  const map = new Map<string, TreeNode>();
+  const roots: TreeNode[] = [];
+  
+  // Create nodes
+  categories.forEach(cat => {
+    map.set(cat._id, { category: cat, children: [] });
+  });
+  
+  // Build tree
+  categories.forEach(cat => {
+    const node = map.get(cat._id)!;
+    if (cat.parentId) {
+      const parent = map.get(cat.parentId);
+      if (parent) {
+        parent.children.push(node);
+      }
+    } else {
+      roots.push(node);
+    }
+  });
+  
+  return roots;
+}
+```
+
+## Tags
+
+Tags provide flexible, non-hierarchical organization.
+
+### Tag System
+
+Tags are stored as string arrays on password entries:
+
+```typescript
+interface DecryptedPasswordEntry {
+  // ... other fields
+  tags: string[];  // e.g., ['work', 'important', 'aws']
+}
+```
+
+### Creating Tags
+
+Tags are created automatically when assigning to passwords:
+
+```typescript
+const { addPassword } = usePasswords();
+
+await addPassword({
+  title: 'AWS Console',
+  username: 'admin@company.com',
+  password: 'SecurePassword123!',
+  tags: ['work', 'cloud', 'aws', 'production']  // Tags created automatically
+});
+```
+
+### Tag Autocomplete
+
+Implement tag autocomplete for better UX:
+
+```tsx
+function TagInput({ value, onChange }: TagInputProps) {
+  const { passwords } = usePasswords();
+  const [input, setInput] = useState('');
+  
+  // Get all unique tags from existing passwords
+  const existingTags = useMemo(() => {
+    const tags = new Set<string>();
+    passwords.forEach(p => p.tags.forEach(t => tags.add(t)));
+    return Array.from(tags).sort();
+  }, [passwords]);
+  
+  // Filter suggestions based on input
+  const suggestions = useMemo(() => {
+    if (!input) return [];
+    return existingTags.filter(tag => 
+      tag.toLowerCase().includes(input.toLowerCase()) &&
+      !value.includes(tag)
+    );
+  }, [input, existingTags, value]);
+  
+  const handleAdd = (tag: string) => {
+    if (!value.includes(tag)) {
+      onChange([...value, tag]);
+      setInput('');
+    }
+  };
+  
+  const handleRemove = (tag: string) => {
+    onChange(value.filter(t => t !== tag));
+  };
+  
+  return (
+    <div>
+      {/* Selected tags */}
+      <div className="flex flex-wrap gap-2 mb-2">
+        {value.map(tag => (
+          <span
+            key={tag}
+            className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-lg text-sm"
+          >
+            {tag}
+            <button
+              onClick={() => handleRemove(tag)}
+              className="hover:text-primary-foreground"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
+      </div>
+      
+      {/* Input with suggestions */}
+      <div className="relative">
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && input) {
+              e.preventDefault();
+              handleAdd(input.toLowerCase());
+            }
+          }}
+          placeholder="Add tags..."
+        />
+        
+        {/* Suggestions dropdown */}
+        {suggestions.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg z-10">
+            {suggestions.map(tag => (
+              <button
+                key={tag}
+                onClick={() => handleAdd(tag)}
+                className="w-full px-3 py-2 text-left hover:bg-accent"
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+### Tag Cloud
+
+Display all tags with usage counts:
+
+```tsx
+function TagCloud() {
+  const { passwords } = usePasswords();
+  
+  const tagCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    passwords.forEach(p => {
+      p.tags.forEach(tag => {
+        counts.set(tag, (counts.get(tag) || 0) + 1);
+      });
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1]);  // Sort by count desc
+  }, [passwords]);
+  
+  const maxCount = Math.max(...tagCounts.map(([, count]) => count));
+  
+  return (
+    <div className="flex flex-wrap gap-2">
+      {tagCounts.map(([tag, count]) => {
+        const size = Math.max(0.75, count / maxCount);
+        return (
+          <button
+            key={tag}
+            style={{ fontSize: `${size}rem` }}
+            className="px-3 py-1 bg-muted hover:bg-accent rounded-lg transition-colors"
+          >
+            {tag}
+            <span className="ml-1 text-xs text-muted-foreground">
+              {count}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+```
+
+## Filtering by Category and Tags
+
+### Combined Filters
+
+```typescript
+function useFilteredPasswords() {
+  const { passwords } = usePasswords();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const filtered = useMemo(() => {
+    let result = [...passwords];
+    
+    // Filter by category
+    if (selectedCategory) {
+      result = result.filter(p => p.categoryId === selectedCategory);
+    }
+    
+    // Filter by tags (AND logic - password must have all selected tags)
+    if (selectedTags.length > 0) {
+      result = result.filter(p => 
+        selectedTags.every(tag => p.tags.includes(tag))
+      );
+    }
+    
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(p =>
+        p.title.toLowerCase().includes(query) ||
+        p.username?.toLowerCase().includes(query) ||
+        p.tags.some(t => t.toLowerCase().includes(query))
+      );
+    }
+    
+    return result;
+  }, [passwords, selectedCategory, selectedTags, searchQuery]);
+  
+  return {
+    filtered,
+    selectedCategory,
+    setSelectedCategory,
+    selectedTags,
+    setSelectedTags,
+    searchQuery,
+    setSearchQuery
+  };
+}
+```
+
+### Filter UI Component
+
+```tsx
+function PasswordFilters() {
+  const {
+    filtered,
+    selectedCategory,
+    setSelectedCategory,
+    selectedTags,
+    setSelectedTags,
+    searchQuery,
+    setSearchQuery
+  } = useFilteredPasswords();
+  
+  const { categories } = useCategoriesQuery();
+  
+  return (
+    <div className="space-y-4">
+      {/* Search */}
+      <Input
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search passwords..."
+      />
+      
+      {/* Category filter */}
+      <Select
+        value={selectedCategory || ''}
+        onValueChange={(value) => setSelectedCategory(value || null)}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="All categories" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">All categories</SelectItem>
+          {categories.map(cat => (
+            <SelectItem key={cat._id} value={cat._id}>
+              {cat.icon} {cat.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      {/* Tag filter */}
+      <TagFilter
+        selected={selectedTags}
+        onChange={setSelectedTags}
+      />
+      
+      {/* Active filters */}
+      {(selectedCategory || selectedTags.length > 0) && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Active filters:</span>
+          {selectedCategory && (
+            <Badge variant="secondary">
+              {categories.find(c => c._id === selectedCategory)?.name}
+              <X 
+                className="ml-1 h-3 w-3 cursor-pointer" 
+                onClick={() => setSelectedCategory(null)}
+              />
+            </Badge>
+          )}
+          {selectedTags.map(tag => (
+            <Badge key={tag} variant="secondary">
+              {tag}
+              <X 
+                className="ml-1 h-3 w-3 cursor-pointer"
+                onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
+              />
+            </Badge>
+          ))}
+        </div>
+      )}
+      
+      {/* Results count */}
+      <p className="text-sm text-muted-foreground">
+        {filtered.length} password{filtered.length !== 1 ? 's' : ''} found
+      </p>
+    </div>
+  );
+}
+```
+
+## Bulk Category/Tag Operations
+
+Update multiple passwords at once:
+
+```typescript
+async function bulkUpdateCategory(
+  passwordIds: string[],
+  categoryId: string
+) {
+  const { updatePassword } = usePasswords();
+  
+  await Promise.all(
+    passwordIds.map(id => updatePassword(id, { categoryId }))
+  );
+}
+
+async function bulkAddTag(
+  passwordIds: string[],
+  tag: string
+) {
+  const { updatePassword, getById } = usePasswords();
+  
+  await Promise.all(
+    passwordIds.map(id => {
+      const password = getById(id);
+      if (!password) return Promise.resolve();
+      
+      const tags = password.tags.includes(tag)
+        ? password.tags
+        : [...password.tags, tag];
+      
+      return updatePassword(id, { tags });
+    })
+  );
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Categories for Broad Organization">
+    Categories work best for high-level grouping like "Work", "Personal", "Finance". Keep the category tree shallow (2-3 levels max).
+  </Accordion>
+  
+  <Accordion title="Use Tags for Cross-Cutting Concerns">
+    Tags are perfect for attributes that span categories like "important", "shared", "deprecated", "needs-update".
+  </Accordion>
+  
+  <Accordion title="Establish Naming Conventions">
+    Use consistent tag naming:
+    - All lowercase
+    - Hyphens for multi-word tags (e.g., "needs-update")
+    - Namespace related tags (e.g., "env:prod", "env:staging")
+  </Accordion>
+  
+  <Accordion title="Regular Cleanup">
+    Periodically review and merge duplicate tags, remove unused categories, and reorganize as your vault grows.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Password Management" icon="key" href="/applications/securevault/password-management">
+    Learn full CRUD operations
+  </Card>
+  <Card title="Security Details" icon="shield" href="/applications/securevault/security">
+    Understand encryption architecture
+  </Card>
+</CardGroup>

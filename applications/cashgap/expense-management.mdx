@@ -1,0 +1,605 @@
+---
+title: Expense Management
+description: Complete guide to implementing expense tracking and categorization in CashGap
+---
+
+# Expense Management
+
+The expense management feature enables users to track spending, categorize expenses, and analyze spending patterns across eight predefined categories.
+
+## Expense Model
+
+### Database Schema
+
+```typescript title="lib/db/models.ts"
+export type ExpenseCategory =
+  | "food"
+  | "transport"
+  | "shopping"
+  | "housing"
+  | "utilities"
+  | "entertainment"
+  | "health"
+  | "other";
+
+export interface ExpenseDocument extends Document {
+  userId: string;
+  name: string;
+  amount: number;
+  category: ExpenseCategory;
+  date: Date;
+  note?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const expenseSchema = new Schema<ExpenseDocument>({
+  userId: { type: String, required: true, index: true },
+  name: { type: String, required: true, trim: true },
+  amount: { type: Number, required: true, min: 0 },
+  category: {
+    type: String,
+    required: true,
+    enum: [
+      "food",
+      "transport",
+      "shopping",
+      "housing",
+      "utilities",
+      "entertainment",
+      "health",
+      "other",
+    ],
+    default: "other",
+  },
+  date: { type: Date, required: true },
+  note: { type: String, trim: true },
+}, { timestamps: true });
+
+// Compound indexes for efficient queries
+expenseSchema.index({ userId: 1, date: -1 });
+expenseSchema.index({ userId: 1, category: 1 });
+
+export const ExpenseModel: Model<ExpenseDocument> =
+  mongoose.models.Expense ||
+  mongoose.model<ExpenseDocument>("Expense", expenseSchema);
+```
+
+## Expense Categories
+
+Each category has custom styling and iconography:
+
+```typescript title="app/expenses/page.tsx"
+import {
+  Utensils,
+  Car,
+  ShoppingBag,
+  Home,
+  Zap,
+  Gamepad2,
+  Heart,
+  MoreHorizontal,
+} from "lucide-react";
+
+const categoryConfig: Record<ExpenseCategory, {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  bg: string;
+}> = {
+  food: {
+    label: "Food & Dining",
+    icon: Utensils,
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
+  },
+  transport: {
+    label: "Transport",
+    icon: Car,
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+  },
+  shopping: {
+    label: "Shopping",
+    icon: ShoppingBag,
+    color: "text-pink-500",
+    bg: "bg-pink-500/10",
+  },
+  housing: {
+    label: "Housing",
+    icon: Home,
+    color: "text-purple-500",
+    bg: "bg-purple-500/10",
+  },
+  utilities: {
+    label: "Utilities",
+    icon: Zap,
+    color: "text-yellow-500",
+    bg: "bg-yellow-500/10",
+  },
+  entertainment: {
+    label: "Entertainment",
+    icon: Gamepad2,
+    color: "text-indigo-500",
+    bg: "bg-indigo-500/10",
+  },
+  health: {
+    label: "Health",
+    icon: Heart,
+    color: "text-red-500",
+    bg: "bg-red-500/10",
+  },
+  other: {
+    label: "Other",
+    icon: MoreHorizontal,
+    color: "text-gray-500",
+    bg: "bg-gray-500/10",
+  },
+};
+```
+
+<CardGroup cols={2}>
+  <Card title="Food & Dining" icon="utensils">
+    Restaurants, groceries, coffee shops, meal delivery services
+  </Card>
+  <Card title="Transportation" icon="car">
+    Gas, public transit, parking fees, car maintenance, rideshare
+  </Card>
+  <Card title="Shopping" icon="shopping-bag">
+    Clothing, electronics, home goods, personal items, gifts
+  </Card>
+  <Card title="Housing" icon="home">
+    Rent, mortgage payments, property taxes, home insurance
+  </Card>
+  <Card title="Utilities" icon="zap">
+    Electricity, water, gas, internet, phone bills
+  </Card>
+  <Card title="Entertainment" icon="gamepad-2">
+    Movies, games, hobbies, events, concerts, streaming
+  </Card>
+  <Card title="Health" icon="heart">
+    Medical expenses, dental, pharmacy, gym membership
+  </Card>
+  <Card title="Other" icon="more-horizontal">
+    Miscellaneous expenses not fitting other categories
+  </Card>
+</CardGroup>
+
+## API Endpoints
+
+### Get All Expenses
+
+```typescript title="app/api/expenses/route.ts"
+import { NextRequest } from "next/server";
+import { connectDB } from "@/lib/db/connection";
+import { ExpenseModel } from "@/lib/db/models";
+import {
+  authenticateRequest,
+  getPaginationParams,
+  paginatedResponse,
+} from "@/lib/api/utils";
+
+export async function GET(request: NextRequest) {
+  try {
+    const { auth, error: authError } = await authenticateRequest(request);
+    if (authError) return authError;
+
+    await connectDB();
+
+    const pagination = getPaginationParams(request);
+    const url = new URL(request.url);
+
+    // Build query filters
+    const query: Record<string, unknown> = { userId: auth.userId };
+
+    // Optional date range filter
+    const startDate = url.searchParams.get("startDate");
+    const endDate = url.searchParams.get("endDate");
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) query.date.$gte = new Date(startDate);
+      if (endDate) query.date.$lte = new Date(endDate);
+    }
+
+    // Optional category filter
+    const category = url.searchParams.get("category");
+    if (category) {
+      query.category = category;
+    }
+
+    // Get total count and items
+    const [total, expenses] = await Promise.all([
+      ExpenseModel.countDocuments(query),
+      ExpenseModel.find(query)
+        .sort({ date: -1 })
+        .skip(pagination.skip)
+        .limit(pagination.limit)
+        .lean(),
+    ]);
+
+    // Transform to client format
+    const items = expenses.map((expense) => ({
+      id: expense._id.toString(),
+      name: expense.name,
+      amount: expense.amount,
+      category: expense.category,
+      date: expense.date.toISOString(),
+      note: expense.note,
+      createdAt: expense.createdAt.toISOString(),
+      updatedAt: expense.updatedAt.toISOString(),
+    }));
+
+    return paginatedResponse(items, total, pagination);
+  } catch (error) {
+    console.error("Expense list error:", error);
+    return errorResponse("INTERNAL_ERROR", "Failed to fetch expenses", 500);
+  }
+}
+```
+
+**Query Parameters:**
+- `page` - Page number (default: 1)
+- `limit` - Items per page (default: 50)
+- `startDate` - Filter from date (ISO format)
+- `endDate` - Filter to date (ISO format)
+- `category` - Filter by expense category
+
+### Create Expense
+
+```typescript title="app/api/expenses/route.ts"
+import { createExpenseSchema } from "@/lib/validations";
+import { parseBody, successResponse } from "@/lib/api/utils";
+
+export async function POST(request: NextRequest) {
+  try {
+    const { auth, error: authError } = await authenticateRequest(request);
+    if (authError) return authError;
+
+    const { data, error: parseError } = await parseBody(
+      request,
+      createExpenseSchema
+    );
+    if (parseError) return parseError;
+
+    await connectDB();
+
+    const expense = await ExpenseModel.create({
+      userId: auth.userId,
+      name: data.name,
+      amount: data.amount,
+      category: data.category,
+      date: new Date(data.date),
+      note: data.note,
+    });
+
+    return successResponse(
+      {
+        id: expense._id.toString(),
+        name: expense.name,
+        amount: expense.amount,
+        category: expense.category,
+        date: expense.date.toISOString(),
+        note: expense.note,
+        createdAt: expense.createdAt.toISOString(),
+        updatedAt: expense.updatedAt.toISOString(),
+      },
+      201
+    );
+  } catch (error) {
+    console.error("Expense create error:", error);
+    return errorResponse("INTERNAL_ERROR", "Failed to create expense", 500);
+  }
+}
+```
+
+**Request Body:**
+```json
+{
+  "name": "Grocery Shopping",
+  "amount": 127.50,
+  "category": "food",
+  "date": "2024-03-15",
+  "note": "Weekly groceries from Whole Foods"
+}
+```
+
+### Update & Delete
+
+Update and delete operations follow the same pattern as income endpoints:
+
+```typescript title="app/api/expenses/[id]/route.ts"
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  // Similar to income PATCH
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  // Similar to income DELETE
+}
+```
+
+## Validation
+
+```typescript title="lib/validations.ts"
+import { z } from "zod";
+
+export const expenseCategorySchema = z.enum([
+  "food",
+  "transport",
+  "shopping",
+  "housing",
+  "utilities",
+  "entertainment",
+  "health",
+  "other",
+]);
+
+export const createExpenseSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  amount: z.number().positive("Amount must be positive"),
+  category: expenseCategorySchema,
+  date: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: "Invalid date format",
+  }),
+  note: z.string().max(500).optional(),
+});
+
+export const updateExpenseSchema = createExpenseSchema.partial();
+
+export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
+export type UpdateExpenseInput = z.infer<typeof updateExpenseSchema>;
+```
+
+## Expense Page UI
+
+The expense page displays spending statistics and categorized expenses:
+
+```typescript title="app/expenses/page.tsx"
+export default function ExpensesPage() {
+  const { data, isLoading } = useDashboardData();
+  const expenses = data?.expenses ?? [];
+  const [categoryOpen, setCategoryOpen] = useState(true);
+
+  // Calculate totals
+  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+  // Group by category
+  const expensesByCategory = expenses.reduce(
+    (acc, expense) => {
+      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+      return acc;
+    },
+    {} as Record<ExpenseCategory, number>
+  );
+
+  // This month's expenses
+  const thisMonth = new Date().toISOString().slice(0, 7);
+  const thisMonthExpenses = expenses.filter(e => e.date.startsWith(thisMonth));
+  const thisMonthTotal = thisMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+  return (
+    <DashboardWrapper className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Expenses</h1>
+          <p className="text-muted-foreground text-lg">
+            Track where your money goes
+          </p>
+        </div>
+        <Button asChild className="rounded-2xl">
+          <Link href="/expenses/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Expense
+          </Link>
+        </Button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <StatCard
+          label="Total Expenses"
+          value={totalExpenses}
+          icon={TrendingDown}
+          color="text-red-500"
+        />
+        <StatCard
+          label="This Month"
+          value={thisMonthTotal}
+          icon={TrendingDown}
+          color="text-red-500"
+        />
+      </div>
+
+      {/* Category Breakdown */}
+      {expenses.length > 0 && (
+        <CategoryBreakdown
+          expensesByCategory={expensesByCategory}
+          isOpen={categoryOpen}
+          onToggle={setCategoryOpen}
+        />
+      )}
+
+      {/* Expense List */}
+      <ExpenseList expenses={expenses} />
+    </DashboardWrapper>
+  );
+}
+```
+
+### Category Breakdown Component
+
+Visual breakdown of spending by category:
+
+```typescript
+function CategoryBreakdown({
+  expensesByCategory,
+  isOpen,
+  onToggle,
+}: {
+  expensesByCategory: Record<ExpenseCategory, number>;
+  isOpen: boolean;
+  onToggle: (open: boolean) => void;
+}) {
+  return (
+    <Collapsible open={isOpen} onOpenChange={onToggle}>
+      <CollapsibleTrigger asChild>
+        <button className="flex items-center gap-3 w-full">
+          <ShoppingBag className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold">By Category</h2>
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-sm text-muted-foreground">
+            {Object.keys(expensesByCategory).length} categories
+          </span>
+          <ChevronDown
+            className={cn(
+              "h-5 w-5 transition-transform",
+              isOpen && "rotate-180"
+            )}
+          />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
+          {(Object.keys(categoryConfig) as ExpenseCategory[]).map((cat) => {
+            const config = categoryConfig[cat];
+            const amount = expensesByCategory[cat] || 0;
+            const Icon = config.icon;
+            return (
+              <div
+                key={cat}
+                className="p-4 rounded-2xl border bg-card text-center"
+              >
+                <div className={`h-10 w-10 rounded-xl ${config.bg} flex items-center justify-center mx-auto mb-2`}>
+                  <Icon className={`h-5 w-5 ${config.color}`} />
+                </div>
+                <p className="text-xs text-muted-foreground mb-1">
+                  {config.label}
+                </p>
+                <p className="font-semibold">{formatCurrency(amount)}</p>
+              </div>
+            );
+          })}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+```
+
+### Expense Card Component
+
+```typescript
+function ExpenseCard({ expense }: { expense: Expense }) {
+  const { deleteExpense } = useFinanceStore();
+  const { addToast } = useToast();
+  const queryClient = useQueryClient();
+  const config = categoryConfig[expense.category];
+  const Icon = config.icon;
+
+  const handleDelete = async () => {
+    try {
+      await deleteExpense(expense.id);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+      addToast({
+        type: "success",
+        title: "Expense deleted",
+        message: `"${expense.name}" has been deleted`,
+      });
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Failed to delete",
+        message: "Please try again.",
+      });
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between p-5 rounded-3xl border bg-card">
+      <div className="flex items-center gap-4">
+        <div className={`h-12 w-12 rounded-2xl ${config.bg} flex items-center justify-center`}>
+          <Icon className={`h-6 w-6 ${config.color}`} />
+        </div>
+        <div>
+          <h3 className="font-semibold">{expense.name}</h3>
+          <p className="text-sm text-muted-foreground">
+            {config.label} • {formatDate(expense.date)}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <p className="text-xl font-bold text-red-600">
+          -{formatCurrency(expense.amount)}
+        </p>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-2.5 hover:bg-muted rounded-2xl">
+              <MoreVertical className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href={`/expenses/${expense.id}/edit`}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}
+```
+
+## Spending Analysis
+
+Calculate spending patterns on the dashboard:
+
+```typescript title="app/(dashboard)/dashboard/page.tsx"
+const spendingByCategory = useMemo(() => {
+  const categoryTotals: Record<string, number> = {};
+  expenses.forEach((e) => {
+    categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount;
+  });
+
+  const totalSpending = Object.values(categoryTotals).reduce(
+    (sum, v) => sum + v,
+    0
+  );
+
+  return Object.entries(categoryTotals)
+    .map(([category, amount]) => ({
+      category,
+      amount,
+      percentage: totalSpending > 0 ? (amount / totalSpending) * 100 : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 5); // Top 5 categories
+}, [expenses]);
+```
+
+<Note>
+  The spending analysis automatically updates as users add or remove expenses, providing real-time insights into their spending habits.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Subscriptions" icon="credit-card" href="/applications/cashgap/subscriptions">
+    Manage recurring subscription payments
+  </Card>
+  <Card title="Features" icon="sparkles" href="/applications/cashgap/features">
+    Explore all CashGap features
+  </Card>
+</CardGroup>

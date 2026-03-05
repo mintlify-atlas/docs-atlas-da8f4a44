@@ -1,122 +1,128 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Money",
+  "theme": "palm",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#8B5CF6",
+    "light": "#8B5CF6",
+    "dark": "#8B5CF6"
   },
-  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/AmarMuric04/money"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/AmarMuric04/money"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Overview",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
-              "index",
+              "introduction",
               "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "monorepo-structure"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Applications",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "CashGap",
             "pages": [
-              "api-reference/introduction"
+              "applications/cashgap/overview",
+              "applications/cashgap/features",
+              "applications/cashgap/authentication",
+              "applications/cashgap/income-tracking",
+              "applications/cashgap/expense-management",
+              "applications/cashgap/subscriptions"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "SecureVault",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "applications/securevault/overview",
+              "applications/securevault/features",
+              "applications/securevault/password-management",
+              "applications/securevault/security",
+              "applications/securevault/categories-tags"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Packages",
+        "groups": [
+          {
+            "group": "Shared UI Components",
+            "pages": [
+              "packages/ui/overview",
+              "packages/ui/buttons",
+              "packages/ui/inputs",
+              "packages/ui/cards",
+              "packages/ui/modals",
+              "packages/ui/sidebar",
+              "packages/ui/dashboard-wrapper"
+            ]
+          },
+          {
+            "group": "Authentication",
+            "pages": [
+              "packages/auth/overview",
+              "packages/auth/configuration",
+              "packages/auth/usage"
+            ]
+          },
+          {
+            "group": "Design System",
+            "pages": [
+              "packages/design-system/colors",
+              "packages/design-system/typography",
+              "packages/design-system/spacing",
+              "packages/design-system/components"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Development Guide",
+            "pages": [
+              "development/setup",
+              "development/running-locally",
+              "development/building",
+              "development/testing"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "development/deployment/overview",
+              "development/deployment/environment-variables",
+              "development/deployment/database-setup"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "development/contributing/guidelines",
+              "development/contributing/code-style",
+              "development/contributing/pull-requests"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

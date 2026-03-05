@@ -1,0 +1,446 @@
+---
+title: SecureVault Features
+description: Comprehensive feature guide for password management, generation, and security analysis
+---
+
+SecureVault offers a complete suite of password management features designed for security, usability, and organization.
+
+## Password Generator
+
+Generate cryptographically secure passwords using the Web Crypto API's `crypto.getRandomValues()` for true randomness.
+
+### Random Password Generation
+
+<CodeGroup>
+```typescript Implementation
+import { generatePassword } from '@/lib/crypto/client';
+
+const password = generatePassword({
+  length: 20,
+  uppercase: true,
+  lowercase: true,
+  numbers: true,
+  symbols: true,
+  excludeAmbiguous: false,
+  excludeCharacters: ''
+});
+
+// Example output: "K#9xMp$2vL@nQ8wR4y!"
+```
+
+```typescript Options Interface
+interface GeneratorOptions {
+  length: number;              // 8-128 characters
+  uppercase: boolean;          // A-Z
+  lowercase: boolean;          // a-z  
+  numbers: boolean;            // 0-9
+  symbols: boolean;            // !@#$%^&*()_+-=[]{}|;:'",.<>?/
+  excludeAmbiguous: boolean;   // Exclude 0, O, l, 1, I
+  excludeCharacters: string;   // Custom exclusions
+}
+```
+</CodeGroup>
+
+### Passphrase Generation
+
+Generate memorable passphrases using a word-based approach:
+
+<CodeGroup>
+```typescript Usage
+import { generatePassphrase } from '@/lib/crypto/client';
+
+const passphrase = generatePassphrase(
+  4,      // wordCount
+  '-',    // separator
+  true,   // capitalize
+  true    // includeNumber
+);
+
+// Example output: "Correct-Horse-Battery-Staple-42"
+```
+
+```typescript Function
+export function generatePassphrase(
+  wordCount: number = 4,
+  separator: string = '-',
+  capitalize: boolean = true,
+  includeNumber: boolean = true
+): string {
+  const words = ['correct', 'horse', 'battery', 'staple', ...];
+  const array = new Uint32Array(wordCount + 1);
+  crypto.getRandomValues(array);
+  
+  const selectedWords: string[] = [];
+  for (let i = 0; i < wordCount; i++) {
+    let word = words[array[i] % words.length];
+    if (capitalize) {
+      word = word.charAt(0).toUpperCase() + word.slice(1);
+    }
+    selectedWords.push(word);
+  }
+  
+  let passphrase = selectedWords.join(separator);
+  
+  if (includeNumber) {
+    const number = (array[wordCount] % 100).toString();
+    passphrase += separator + number;
+  }
+  
+  return passphrase;
+}
+```
+</CodeGroup>
+
+## Password Strength Analysis
+
+Real-time password strength calculation with entropy analysis and actionable feedback.
+
+### Strength Calculation
+
+<CodeGroup>
+```typescript calculatePasswordStrength
+import { calculatePasswordStrength } from '@/lib/crypto/client';
+
+const result = calculatePasswordStrength('MyP@ssw0rd123');
+
+console.log(result);
+// {
+//   score: 3,
+//   entropy: 68,
+//   crackTime: "years",
+//   feedback: ["Consider using 16+ characters for better security"],
+//   warning: undefined
+// }
+```
+
+```typescript Strength Levels
+type PasswordScore = 0 | 1 | 2 | 3 | 4;
+
+const strengthLabels = {
+  0: 'Very Weak',   // 0-25 bits entropy
+  1: 'Weak',        // 26-50 bits
+  2: 'Fair',        // 51-75 bits
+  3: 'Strong',      // 76-100 bits
+  4: 'Very Strong'  // 100+ bits
+};
+
+const strengthColors = [
+  'bg-red-500',      // Very Weak
+  'bg-orange-500',   // Weak
+  'bg-yellow-500',   // Fair
+  'bg-lime-500',     // Strong
+  'bg-green-500'     // Very Strong
+];
+```
+</CodeGroup>
+
+### Entropy Calculation
+
+The strength algorithm calculates entropy based on character set size and password length:
+
+```typescript
+function calculateEntropy(password: string): number {
+  let charsetSize = 0;
+  
+  if (/[a-z]/.test(password)) charsetSize += 26;
+  if (/[A-Z]/.test(password)) charsetSize += 26;
+  if (/[0-9]/.test(password)) charsetSize += 10;
+  if (/[^A-Za-z0-9]/.test(password)) charsetSize += 32;
+  
+  const entropy = password.length * Math.log2(charsetSize || 1);
+  return Math.round(entropy);
+}
+```
+
+### UI Component
+
+Display password strength with visual feedback:
+
+```tsx
+function PasswordStrengthIndicator({ password }: { password: string }) {
+  const strength = calculatePasswordStrength(password);
+  
+  return (
+    <div className="space-y-2">
+      {/* Strength bars */}
+      <div className="flex gap-1.5">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className={cn(
+              "h-2 flex-1 rounded-full transition-all",
+              i <= strength.score
+                ? strengthColors[strength.score]
+                : "bg-muted"
+            )}
+          />
+        ))}
+      </div>
+      
+      {/* Label and entropy */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">
+          {strengthLabels[strength.score]}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {strength.entropy} bits entropy
+        </span>
+      </div>
+      
+      {/* Feedback */}
+      {strength.feedback.length > 0 && (
+        <ul className="text-xs text-muted-foreground space-y-1">
+          {strength.feedback.map((item, i) => (
+            <li key={i}>• {item}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+```
+
+## Search and Filter
+
+Powerful search and filtering capabilities to quickly find passwords.
+
+### Full-Text Search
+
+Search across multiple fields:
+
+```typescript
+const filteredPasswords = passwords.filter(entry => {
+  const query = searchQuery.toLowerCase();
+  return (
+    entry.title.toLowerCase().includes(query) ||
+    entry.username?.toLowerCase().includes(query) ||
+    entry.url?.toLowerCase().includes(query) ||
+    entry.notes?.toLowerCase().includes(query) ||
+    entry.tags.some(t => t.toLowerCase().includes(query))
+  );
+});
+```
+
+### Filter Options
+
+<Tabs>
+  <Tab title="By Security">
+    ```typescript
+    // Filter weak passwords
+    const weakPasswords = passwords.filter(
+      p => p.passwordStrength <= 1
+    );
+    
+    // Filter compromised passwords
+    const compromised = passwords.filter(
+      p => p.isCompromised
+    );
+    
+    // Filter reused passwords
+    const reused = passwords.filter(
+      p => p.isReused
+    );
+    ```
+  </Tab>
+  <Tab title="By Category">
+    ```typescript
+    // Filter by category
+    const categoryPasswords = passwords.filter(
+      p => p.categoryId === selectedCategoryId
+    );
+    ```
+  </Tab>
+  <Tab title="By Favorites">
+    ```typescript
+    // Filter favorites
+    const favorites = passwords.filter(
+      p => p.favorite && !p.deletedAt
+    );
+    ```
+  </Tab>
+  <Tab title="By Tags">
+    ```typescript
+    // Filter by tag
+    const taggedPasswords = passwords.filter(
+      p => p.tags.includes(selectedTag)
+    );
+    ```
+  </Tab>
+</Tabs>
+
+### Sorting
+
+Sort passwords by various fields:
+
+```typescript
+type SortField = 'title' | 'updatedAt' | 'createdAt' | 'passwordStrength';
+type SortOrder = 'asc' | 'desc';
+
+function sortPasswords(
+  passwords: DecryptedPasswordEntry[],
+  field: SortField,
+  order: SortOrder
+) {
+  return [...passwords].sort((a, b) => {
+    let comparison = 0;
+    
+    switch (field) {
+      case 'title':
+        comparison = a.title.localeCompare(b.title);
+        break;
+      case 'updatedAt':
+        comparison = new Date(a.updatedAt).getTime() - 
+                     new Date(b.updatedAt).getTime();
+        break;
+      case 'createdAt':
+        comparison = new Date(a.createdAt).getTime() - 
+                     new Date(b.createdAt).getTime();
+        break;
+      case 'passwordStrength':
+        comparison = a.passwordStrength - b.passwordStrength;
+        break;
+    }
+    
+    return order === 'asc' ? comparison : -comparison;
+  });
+}
+```
+
+## View Modes
+
+SecureVault supports two view modes: Grid and List.
+
+### Grid View
+
+Compact card layout for quick overview:
+
+```tsx
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+  {passwords.map((entry) => (
+    <PasswordCard key={entry._id} entry={entry} compact />
+  ))}
+</div>
+```
+
+### List View
+
+Detailed row layout with inline actions:
+
+```tsx
+<div className="space-y-3">
+  {passwords.map((entry) => (
+    <PasswordCard key={entry._id} entry={entry} />
+  ))}
+</div>
+```
+
+## Security Dashboard
+
+Visual overview of password security health.
+
+### Security Stats
+
+<CardGroup cols={3}>
+  <Card title="Weak Passwords" icon="shield-halved" color="#f97316">
+    Passwords with strength score ≤ 1
+  </Card>
+  <Card title="Compromised" icon="triangle-exclamation" color="#ef4444">
+    Passwords found in breach databases
+  </Card>
+  <Card title="Reused" icon="copy" color="#eab308">
+    Passwords used in multiple entries
+  </Card>
+</CardGroup>
+
+### Implementation
+
+```typescript
+const stats = useMemo(() => {
+  const weak = passwords.filter(p => p.passwordStrength <= 1).length;
+  const compromised = passwords.filter(p => p.isCompromised).length;
+  const reused = passwords.filter(p => p.isReused).length;
+  return { weak, compromised, reused, total: passwords.length };
+}, [passwords]);
+```
+
+## Clipboard Management
+
+Secure clipboard operations with auto-clear functionality.
+
+### Copy with Auto-Clear
+
+```typescript
+const handleCopyPassword = async (password: string) => {
+  await navigator.clipboard.writeText(password);
+  
+  addToast({
+    type: 'success',
+    title: 'Copied!',
+    message: 'Password copied to clipboard',
+    duration: 2000
+  });
+  
+  // Auto-clear clipboard after 30 seconds
+  setTimeout(() => {
+    navigator.clipboard.writeText('');
+  }, 30000);
+};
+```
+
+### Configurable Clear Time
+
+Users can configure clipboard clear timeout in settings:
+
+```typescript
+interface UserSettings {
+  clearClipboardSeconds: 30 | 60 | 90 | 120;
+}
+```
+
+## Trash and Recovery
+
+Soft delete with 30-day retention period.
+
+### Soft Delete
+
+```typescript
+// Move to trash
+async function deletePassword(id: string) {
+  await updatePassword(id, {
+    deletedAt: new Date()
+  });
+}
+
+// View trash
+const trash = passwords.filter(p => !!p.deletedAt);
+```
+
+### Restore from Trash
+
+```typescript
+async function restorePassword(id: string) {
+  await updatePassword(id, {
+    deletedAt: undefined
+  });
+}
+```
+
+### Permanent Delete
+
+```typescript
+// Permanent deletion (no recovery)
+async function permanentDelete(id: string) {
+  await api.delete(`/passwords/${id}?permanent=true`);
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Password Management" icon="key" href="/applications/securevault/password-management">
+    Learn CRUD operations and workflows
+  </Card>
+  <Card title="Categories & Tags" icon="tags" href="/applications/securevault/categories-tags">
+    Organize your vault efficiently
+  </Card>
+</CardGroup>

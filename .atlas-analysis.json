@@ -1,0 +1,137 @@
+{
+  "projectType": "saas",
+  "projectName": "Money",
+  "projectDescription": "A TypeScript monorepo featuring personal finance management and password vault applications with a shared component library.",
+  "theme": "palm",
+  "primaryColor": "#8B5CF6",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Overview",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "monorepo-structure"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Applications",
+        "groups": [
+          {
+            "group": "CashGap",
+            "pages": [
+              "applications/cashgap/overview",
+              "applications/cashgap/features",
+              "applications/cashgap/authentication",
+              "applications/cashgap/income-tracking",
+              "applications/cashgap/expense-management",
+              "applications/cashgap/subscriptions"
+            ]
+          },
+          {
+            "group": "SecureVault",
+            "pages": [
+              "applications/securevault/overview",
+              "applications/securevault/features",
+              "applications/securevault/password-management",
+              "applications/securevault/security",
+              "applications/securevault/categories-tags"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Packages",
+        "groups": [
+          {
+            "group": "Shared UI Components",
+            "pages": [
+              "packages/ui/overview",
+              "packages/ui/buttons",
+              "packages/ui/inputs",
+              "packages/ui/cards",
+              "packages/ui/modals",
+              "packages/ui/sidebar",
+              "packages/ui/dashboard-wrapper"
+            ]
+          },
+          {
+            "group": "Authentication",
+            "pages": [
+              "packages/auth/overview",
+              "packages/auth/configuration",
+              "packages/auth/usage"
+            ]
+          },
+          {
+            "group": "Design System",
+            "pages": [
+              "packages/design-system/colors",
+              "packages/design-system/typography",
+              "packages/design-system/spacing",
+              "packages/design-system/components"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Development Guide",
+            "pages": [
+              "development/setup",
+              "development/running-locally",
+              "development/building",
+              "development/testing"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "development/deployment/overview",
+              "development/deployment/environment-variables",
+              "development/deployment/database-setup"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "development/contributing/guidelines",
+              "development/contributing/code-style",
+              "development/contributing/pull-requests"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Turborepo monorepo with multiple Next.js applications",
+    "CashGap: Personal finance tracking (income, expenses, subscriptions)",
+    "SecureVault: Password manager with encryption and security features",
+    "Shared UI component library with dark-first design system",
+    "NextAuth.js authentication with MongoDB",
+    "TypeScript-first development with strict type checking",
+    "Tailwind CSS v4 with OKLCH color system",
+    "Radix UI primitives for accessible components"
+  ],
+  "publicApiSurface": [
+    "CashGap: /api/income - Income tracking endpoints",
+    "CashGap: /api/expenses - Expense management endpoints",
+    "CashGap: /api/subscriptions - Subscription tracking endpoints",
+    "CashGap: /api/dashboard - Dashboard data aggregation",
+    "SecureVault: /api/vault - Password vault endpoints",
+    "SecureVault: /api/categories - Password category management",
+    "@repo/ui: Button, Input, Card, Modal, Sidebar components",
+    "@repo/ui: DashboardWrapper, EmptyState, LoadingOverlay",
+    "@repo/auth: Login, Register, AuthLayout components"
+  ]
+}
